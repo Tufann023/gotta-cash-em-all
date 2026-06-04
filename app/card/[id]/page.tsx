@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import PriceChart from "@/app/components/PriceChart";
+import InvestmentAnalysis from "@/app/components/InvestmentAnalysis";
 import { useWatchlist } from "@/lib/watchlist";
 
 type Slab = { grade: string; low: number; high: number; mid: number };
@@ -59,9 +60,6 @@ function freshLabel(days: number | null): { text: string; tone: "fresh" | "ok" |
 export default function CardPage({ params }: { params: { id: string } }) {
   const [data, setData] = useState<Payload | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [aiText, setAiText] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiErr, setAiErr] = useState<string | null>(null);
   const { add, remove, has, hydrated } = useWatchlist();
 
   useEffect(() => {
@@ -74,20 +72,6 @@ export default function CardPage({ params }: { params: { id: string } }) {
       } catch (e: any) { setErr(e.message); }
     })();
   }, [params.id]);
-
-  async function runAI() {
-    setAiLoading(true); setAiErr(null); setAiText(null);
-    try {
-      const res = await fetch(`/api/analyse`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: params.id }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "ai call failed");
-      setAiText(json.analysis);
-    } catch (e: any) { setAiErr(e.message); }
-    finally { setAiLoading(false); }
-  }
 
   if (err) return <div className="text-neg">Fout: {err}</div>;
   if (!data) return <div className="text-ink2">Laden…</div>;
@@ -164,40 +148,30 @@ export default function CardPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <PricePanel prices={prices} cardmarketUrl={cardmarketUrl} tcgplayerUrl={tcgplayerUrl} />
+      {/* AI INVESTERINGSANALYSE — primair, bovenaan na hero */}
+      <InvestmentAnalysis cardId={card.id} currentPriceEUR={headline} />
 
+      {/* PSA slabs — investerings-grades */}
       <div className="grid md:grid-cols-2 gap-5">
-        <PriceChart data={history} />
         <SlabPanel slabs={slabs} />
+        <PriceChart data={history} />
       </div>
 
+      {/* Quick-scorer signalen */}
       <SignalsPanel signals={analysis.signals} />
-      <OutlookPanel outlook={analysis.outlook} />
 
-      <div className="bg-card rounded-md border p-6">
-        <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
-          <div>
-            <div className="text-[11px] font-semibold uppercase  text-accent">Diepere AI-analyse</div>
-            <div className="text-[13px] text-ink2 mt-1">Claude Haiku 4.5 · ~$0,01-$0,03 per analyse</div>
-          </div>
-          <button onClick={runAI} disabled={aiLoading}
-            className="px-4 py-2.5 rounded-full bg-accent text-white text-[13px] font-semibold hover:bg-accentDeep disabled:opacity-50 transition">
-            {aiLoading ? "Genereren…" : aiText ? "Opnieuw genereren" : "Genereer AI-analyse"}
-          </button>
+      {/* Volledige prijsbronnen — verlaagd qua hiërarchie */}
+      <details className="bg-card rounded-md border p-5" style={{ borderColor: "#DCE7F4" }}>
+        <summary className="cursor-pointer font-display text-[18px] text-ink select-none" style={{ fontWeight: 400 }}>
+          Alle prijsindicatoren (TCGPlayer + Cardmarket)
+        </summary>
+        <div className="mt-4">
+          <PricePanel prices={prices} cardmarketUrl={cardmarketUrl} tcgplayerUrl={tcgplayerUrl} />
         </div>
-        {aiErr && <div className="text-neg text-sm">Fout: {aiErr}</div>}
-        {aiText && (
-          <div className="text-ink text-[14px] whitespace-pre-wrap leading-relaxed">{aiText}</div>
-        )}
-        {!aiText && !aiErr && (
-          <div className="text-ink2 text-[13px]">
-            Klik "Genereer AI-analyse" voor een gericht 150-200 woord oordeel met specifieke risico's en concrete actie.
-          </div>
-        )}
-      </div>
+      </details>
 
       <div className="text-[11px] text-ink3 leading-relaxed">
-        Quick-analyse: {analysis.summary}
+        Quick-scorer (regel-gebaseerd, zonder AI): {analysis.summary}
       </div>
     </div>
   );
