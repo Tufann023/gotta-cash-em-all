@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   if (!q.trim()) return NextResponse.json({ data: [], total: 0 });
 
   try {
-    const cards = await searchCards(q, 100);
+    const cards = await searchCards(q);
     const slim = cards.map((c) => ({
       id: c.id,
       name: c.name,

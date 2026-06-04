@@ -67,15 +67,16 @@ async function runQuery(qParam: string, pageSize: number): Promise<Card[]> {
 // Slimme zoekfunctie die multi-token queries opbouwt en parallel uitvoert.
 // Geeft tot ~250 unieke resultaten terug (dedupe + ranking).
 // Frontend handelt verdere pagination/filtering af.
-export async function searchCards(q: string, perSubQuery = 100): Promise<Card[]> {
+export async function searchCards(q: string): Promise<Card[]> {
   const query = q.trim();
   if (!query) return [];
 
   const tokens = query.split(/\s+/);
-  const queries: string[] = [];
+  // pokemontcg.io max pageSize = 250. Eerste query is de breedste, krijgt max.
+  // Sub-queries (met set-hint) zijn nauwer, daar volstaat 100.
+  const queries: { q: string; size: number }[] = [];
 
-  // Pure name search met volledige query (breed)
-  queries.push(`name:"${query}*"`);
+  queries.push({ q: `name:"${query}*"`, size: 250 });
 
   if (tokens.length >= 2) {
     const first = tokens[0];
@@ -83,20 +84,17 @@ export async function searchCards(q: string, perSubQuery = 100): Promise<Card[]>
     const allButLast = tokens.slice(0, -1).join(" ");
     const allButFirst = tokens.slice(1).join(" ");
 
-    // Set hint achteraan: "charizard 151"
-    queries.push(`name:"${allButLast}*" (set.name:"*${last}*" OR set.id:"*${last}*" OR number:"${last}")`);
-    queries.push(`name:"${first}*" (set.name:"*${allButFirst}*" OR set.id:"*${allButFirst}*")`);
-
-    // Set hint vooraan: "evolving skies umbreon"
-    queries.push(`name:"${last}*" set.name:"*${allButLast}*"`);
+    queries.push({ q: `name:"${allButLast}*" (set.name:"*${last}*" OR set.id:"*${last}*" OR number:"${last}")`, size: 100 });
+    queries.push({ q: `name:"${first}*" (set.name:"*${allButFirst}*" OR set.id:"*${allButFirst}*")`, size: 100 });
+    queries.push({ q: `name:"${last}*" set.name:"*${allButLast}*"`, size: 100 });
   }
 
   if (/^\d+$/.test(query)) {
-    queries.push(`set.name:"*${query}*"`);
-    queries.push(`set.id:"*${query}*"`);
+    queries.push({ q: `set.name:"*${query}*"`, size: 250 });
+    queries.push({ q: `set.id:"*${query}*"`, size: 250 });
   }
 
-  const results = await Promise.all(queries.map((q) => runQuery(q, perSubQuery)));
+  const results = await Promise.all(queries.map(({ q, size }) => runQuery(q, size)));
 
   const seen = new Set<string>();
   const merged: Card[] = [];

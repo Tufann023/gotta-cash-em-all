@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { ResultGridSkeleton, SearchingBar } from "./components/Skeleton";
 
 type Result = {
   id: string; name: string; number: string; rarity?: string;
@@ -134,7 +135,12 @@ export default function HomePage() {
             style={{ paddingLeft: "3.25rem" }}
           />
           {loading && (
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-muted text-[13px]">Zoeken…</div>
+            <div className="absolute right-5 top-1/2 -translate-y-1/2">
+              <div className="relative w-5 h-5">
+                <div className="absolute inset-0 rounded-full border-2 border-elevated" />
+                <div className="absolute inset-0 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+              </div>
+            </div>
           )}
         </div>
         <div className="mt-3 flex flex-wrap gap-2 justify-center text-[12px] text-muted">
@@ -148,6 +154,14 @@ export default function HomePage() {
       </div>
 
       {err && <div className="text-neg text-sm text-center">Fout: {err}</div>}
+
+      {/* Skeleton during initial loading */}
+      {loading && results.length === 0 && q.trim().length >= 2 && (
+        <div className="fade-in space-y-4">
+          <SearchingBar />
+          <ResultGridSkeleton count={10} />
+        </div>
+      )}
 
       {results.length > 0 && (
         <div className="fade-in space-y-6">
@@ -259,7 +273,11 @@ export default function HomePage() {
       )}
 
       {!loading && q.trim().length >= 2 && results.length === 0 && !err && (
-        <div className="text-muted text-center">Geen resultaten voor "{q}".</div>
+        <ExternalSearchPanel query={q} reason="zero" />
+      )}
+
+      {results.length > 0 && filtered.length === visible.length && filtered.length >= 50 && (
+        <ExternalSearchPanel query={q} reason="completeness" />
       )}
 
       {q.trim().length < 2 && (
@@ -305,5 +323,57 @@ function Chip({ active, onClick, label, hint }: { active: boolean; onClick: () =
       <span>{label}</span>
       {hint && <span className={`text-[10px] ${active ? "opacity-80" : "opacity-60"}`}>{hint}</span>}
     </button>
+  );
+}
+
+function ExternalSearchPanel({ query, reason }: { query: string; reason: "zero" | "completeness" }) {
+  const q = encodeURIComponent(query);
+  const pokemonQ = encodeURIComponent(`${query} pokemon`);
+  const links = [
+    {
+      label: "PriceCharting",
+      url: `https://www.pricecharting.com/search-products?q=${pokemonQ}&type=prices`,
+      desc: "Volledige database incl. Japanse promo's, vintage en sealed product",
+    },
+    {
+      label: "TCGdex",
+      url: `https://tcgdex.net/series?q=${q}`,
+      desc: "Internationale TCG-database met betere Japanse coverage",
+    },
+    {
+      label: "eBay sold",
+      url: `https://www.ebay.com/sch/i.html?_nkw=${pokemonQ}&LH_Sold=1&LH_Complete=1`,
+      desc: "Actuele verkooptransacties van de laatste 90 dagen",
+    },
+  ];
+  return (
+    <div className={`bg-surface rounded-2xl border hairline p-6 ${reason === "zero" ? "mt-8" : "mt-8"}`}>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-accent mb-2">
+        {reason === "zero" ? "Niets gevonden?" : "Niet wat je zocht?"}
+      </div>
+      <div className="font-semibold text-ink text-[16px] mb-2">
+        {reason === "zero"
+          ? `Geen kaart in onze database met "${query}".`
+          : "Op zoek naar een Japanse promo, vintage of sealed product?"}
+      </div>
+      <p className="text-[13px] text-muted leading-relaxed mb-4 max-w-2xl">
+        Onze data komt van pokemontcg.io — primair Engelstalig, beperkte Japanse coverage en geen sealed product.
+        Probeer een van deze externe databases met bredere dekking:
+      </p>
+      <div className="grid md:grid-cols-3 gap-3">
+        {links.map((l) => (
+          <a key={l.label} href={l.url} target="_blank" rel="noopener"
+             className="group block p-4 rounded-xl bg-elevated hover:bg-accentSoft transition">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="font-semibold text-ink text-[14px] group-hover:text-accent transition">{l.label}</span>
+              <svg className="text-muted group-hover:text-accent transition" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 17 17 7"/><path d="M7 7h10v10"/>
+              </svg>
+            </div>
+            <div className="text-[11px] text-muted leading-snug">{l.desc}</div>
+          </a>
+        ))}
+      </div>
+    </div>
   );
 }
