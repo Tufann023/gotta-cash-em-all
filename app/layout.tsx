@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import WatchlistBadge from "./components/WatchlistBadge";
 import Pokeball from "./components/Pokeball";
+import MobileNav from "./components/MobileNav";
 
 export const metadata: Metadata = {
   title: "Gotta Cash 'Em All — Pokemon kaart tracker",
@@ -13,17 +14,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="nl">
       <body>
         <header className="sticky top-0 z-40 backdrop-blur-nav" style={{ backdropFilter: "saturate(1.4) blur(12px)", background: "color-mix(in srgb, #F4F8FE 82%, transparent)", borderBottom: "1px solid #DCE7F4" }}>
-          <div className="max-w-page mx-auto px-7 h-[78px] flex items-center justify-between">
-            <a href="/" className="flex items-center gap-3" aria-label="Gotta Cash 'Em All home">
+          <div className="max-w-page mx-auto px-4 md:px-7 h-[78px] flex items-center justify-between gap-3">
+            <a href="/" className="flex items-center gap-2.5 md:gap-3 min-w-0" aria-label="Gotta Cash 'Em All home">
               <Pokeball size={30} />
               <span
-                className="font-display text-[27px] leading-[.9] whitespace-nowrap logo-treatment"
+                className="font-display text-[19px] sm:text-[22px] md:text-[27px] leading-[.9] whitespace-nowrap logo-treatment truncate"
                 style={{ letterSpacing: ".5px", transform: "rotate(-2deg)" }}
               >
                 Gotta Cash <span style={{ color: "#fff", WebkitTextStroke: "2.5px #0B2A4A" }}>'Em</span> All
               </span>
             </a>
-            <nav className="flex items-center gap-2">
+            <nav className="hidden md:flex items-center gap-2">
               <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150" href="/">Zoeken</a>
               <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150 inline-flex items-center gap-1.5" href="/watchlist">
                 Watchlist <WatchlistBadge />
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Inloggen
               </a>
             </nav>
+            <MobileNav />
           </div>
         </header>
         <main id="top">{children}</main>

@@ -311,7 +311,7 @@ export default function HomePage() {
 
               {filtered.length > 0 ? (
                 <>
-                  <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
+                  <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 sm:gap-5">
                     {visible.map((r) => <TCGCard key={r.id} card={r} />)}
                   </div>
                   {filtered.length > shownCount && (
