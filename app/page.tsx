@@ -27,6 +27,13 @@ const SORT_OPTIONS = [
 ] as const;
 type SortKey = typeof SORT_OPTIONS[number]["key"];
 
+const SUGGESTIONS = [
+  { label: "charizard 151", pip: "#FF6B35" }, // fire
+  { label: "umbreon vmax",  pip: "#3A4756" }, // dark
+  { label: "lugia silver",  pip: "#2A75BB" }, // water
+  { label: "pikachu vmax",  pip: "#FFCB05" }, // electric
+];
+
 const PAGE_SIZE = 24;
 
 export default function HomePage() {
@@ -54,7 +61,6 @@ export default function HomePage() {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "search failed");
         setResults(json.data || []);
-        // Reset filters bij nieuwe zoekopdracht
         setSelectedSets(new Set());
         setSelectedRarities(new Set());
         setSelectedBucket(null);
@@ -65,7 +71,6 @@ export default function HomePage() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [q]);
 
-  // Unieke sets & rariteiten uit huidige resultaten
   const availableSets = useMemo(() => {
     const m = new Map<string, number>();
     results.forEach((r) => m.set(r.setName, (m.get(r.setName) ?? 0) + 1));
@@ -78,7 +83,6 @@ export default function HomePage() {
     return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
   }, [results]);
 
-  // Apply filters + sort
   const filtered = useMemo(() => {
     let xs = results.filter((r) => {
       if (selectedSets.size > 0 && !selectedSets.has(r.setName)) return false;
@@ -112,217 +116,320 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-10">
-      <div className="text-center max-w-2xl mx-auto pt-6">
-        <h1 className="font-display text-5xl md:text-6xl font-bold text-ink leading-[1.05]">
-          Elke Pokemon kaart.<br />
-          <span className="text-pokeBlue">Eén prijs.</span>
-        </h1>
-        <p className="mt-5 text-[17px] text-muted leading-relaxed">
-          Zoek per kaartnaam, set of nummer. Direct marktprijs, PSA-schatting per grade, prijsverloop en investerings-analyse.
-        </p>
-      </div>
+    <>
+      {/* HERO */}
+      <section className="px-7 pt-[84px] pb-9 text-center overflow-hidden">
+        <div className="max-w-page mx-auto">
+          <span
+            className="inline-flex items-center gap-2 font-bold text-[13px] uppercase rounded-full px-[15px] py-[7px] mb-[26px] whitespace-nowrap"
+            style={{
+              letterSpacing: ".14em",
+              color: "#EE1515",
+              background: "color-mix(in srgb, #EE1515 12%, #fff)",
+              border: "1px solid color-mix(in srgb, #EE1515 28%, transparent)",
+            }}
+          >
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ background: "#EE1515", boxShadow: "0 0 0 3px color-mix(in srgb, #EE1515 25%, transparent)" }}
+            />
+            Live marktprijzen · PSA-schattingen
+          </span>
+          <h1
+            className="font-display m-0 text-ink"
+            style={{
+              fontSize: "clamp(46px, 8.5vw, 104px)",
+              lineHeight: ".94",
+              letterSpacing: "-.5px",
+              fontWeight: 400,
+            }}
+          >
+            Elke Pokémon kaart.
+            <span
+              className="logo-treatment-large"
+              style={{ display: "block", transform: "rotate(-1.5deg)", marginTop: ".06em" }}
+            >
+              Eén prijs.
+            </span>
+          </h1>
+          <p
+            className="max-w-prose mx-auto mt-[30px] text-ink2 font-normal"
+            style={{ fontSize: "clamp(17px, 2vw, 21px)", textWrap: "balance" }}
+          >
+            Zoek per kaartnaam, set of nummer. Direct marktprijs, PSA-schatting per grade, prijsverloop en investerings-analyse.
+          </p>
 
-      <div className="max-w-2xl mx-auto">
-        <div className="relative">
-          <svg className="absolute left-5 top-1/2 -translate-y-1/2 text-muted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            type="text" value={q} onChange={(e) => setQ(e.target.value)}
-            placeholder="Charizard 151, Umbreon VMAX, Pikachu…"
-            autoFocus
-            className="w-full bg-surface border hairline rounded-2xl pl-13 pr-5 py-4 text-[17px] outline-none focus:border-accent focus:ring-4 focus:ring-accentSoft transition shadow-card"
-            style={{ paddingLeft: "3.25rem" }}
-          />
-          {loading && (
-            <div className="absolute right-5 top-1/2 -translate-y-1/2">
-              <span className="pokeball-spinner" aria-label="Aan het zoeken" role="status" />
-            </div>
-          )}
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2 justify-center text-[12px] text-muted">
-          <span>Probeer:</span>
-          {["charizard 151", "umbreon vmax", "lugia silver", "pikachu vmax"].map((s) => (
-            <button key={s} onClick={() => setQ(s)} className="px-2.5 py-1 rounded-full bg-elevated hover:bg-accentSoft hover:text-accent transition">
-              {s}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {err && <div className="text-neg text-sm text-center">Fout: {err}</div>}
-
-      {/* Skeleton during initial loading */}
-      {loading && results.length === 0 && q.trim().length >= 2 && (
-        <div className="fade-in space-y-4">
-          <SearchingBar />
-          <ResultGridSkeleton count={10} />
-        </div>
-      )}
-
-      {results.length > 0 && (
-        <div className="fade-in space-y-6">
-          {/* Results header */}
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="text-[14px] text-muted">
-              <span className="text-ink font-semibold">{filtered.length}</span> van {results.length} resultaten
-              {activeFilters > 0 && <span> · {activeFilters} filter{activeFilters > 1 ? "s" : ""} actief</span>}
-            </div>
-            <div className="flex items-center gap-2">
+          {/* SEARCH ZONE */}
+          <div className="max-w-[760px] mx-auto mt-[46px] relative">
+            <form
+              className="holo-glow flex items-center gap-[14px] bg-card border-2 rounded-full shadow-md transition-all"
+              style={{ borderColor: "#C3D5EC", padding: "6px 6px 6px 24px" }}
+              onSubmit={(e) => e.preventDefault()}
+              autoComplete="off"
+            >
+              <span className="flex-none text-accent">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Charizard 151, Umbreon VMAX, Pikachu…"
+                aria-label="Zoek een kaart"
+                autoFocus
+                className="flex-1 bg-transparent border-0 outline-none font-medium text-[18px] text-ink min-w-0 py-4 placeholder:text-ink3 placeholder:font-medium"
+              />
+              {loading && (
+                <span className="pokeball-spinner mr-2" aria-label="Aan het zoeken" role="status" />
+              )}
               <button
-                onClick={() => setFiltersOpen((v) => !v)}
-                aria-expanded={filtersOpen}
-                aria-controls="filter-panel"
-                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold transition border ${
-                  filtersOpen
-                    ? "bg-accent text-white border-accent"
-                    : activeFilters > 0
-                      ? "bg-accentSoft text-accent border-accent/30"
-                      : "bg-surface text-ink border-line hover:border-accent hover:text-accent"
-                }`}
+                type="submit"
+                className="btn-physical flex-none font-display text-[17px] rounded-full"
+                style={{
+                  background: "#FFCB05",
+                  color: "#0B2A4A",
+                  letterSpacing: ".5px",
+                  padding: "0 26px",
+                  height: 54,
+                  boxShadow: "0 3px 0 #F2B705",
+                }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 6h18M7 12h10M10 18h4"/>
-                </svg>
-                <span>Filter</span>
-                {activeFilters > 0 && (
-                  <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold ${filtersOpen ? "bg-white/25 text-white" : "bg-accent text-white"}`}>
-                    {activeFilters}
-                  </span>
-                )}
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`transition-transform ${filtersOpen ? "rotate-180" : ""}`}>
-                  <path d="m6 9 6 6 6-6"/>
-                </svg>
+                Zoek
               </button>
-              <label htmlFor="sort-select" className="sr-only">Sorteer resultaten</label>
-              <select
-                id="sort-select"
-                value={sort} onChange={(e) => setSort(e.target.value as SortKey)}
-                className="bg-surface border hairline rounded-full px-3.5 py-2 text-[13px] font-medium outline-none focus:border-accent transition cursor-pointer"
-              >
-                {SORT_OPTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
+            </form>
+
+            <div className="flex items-center justify-center flex-wrap gap-[10px] mt-[22px]">
+              <span className="text-ink3 font-semibold text-[14px] mr-0.5">Probeer:</span>
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => setQ(s.label)}
+                  className="inline-flex items-center gap-2 font-semibold text-[14px] text-ink2 bg-card border-[1.5px] rounded-full px-4 py-[9px] transition-all duration-150 hover:-translate-y-0.5 hover:text-ink hover:shadow-sm"
+                  style={{ borderColor: "#C3D5EC" }}
+                  onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#EE1515"; }}
+                  onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#C3D5EC"; }}
+                >
+                  <span className="w-[9px] h-[9px] rounded-full flex-none" style={{ background: s.pip }} />
+                  {s.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Filter panel (collapsible) */}
-          {filtersOpen && (
-            <div id="filter-panel" className="fade-in bg-surface rounded-2xl border hairline p-5 space-y-4" role="region" aria-label="Filter opties">
-              {availableSets.length > 1 && (
-                <FilterGroup label={`Set (${availableSets.length})`}>
-                  {availableSets.slice(0, 12).map(([s, count]) => (
-                    <Chip
-                      key={s} active={selectedSets.has(s)} onClick={() => toggleSet(s)}
-                      label={s} hint={`${count}`}
-                    />
-                  ))}
-                </FilterGroup>
-              )}
-              {availableRarities.length > 1 && (
-                <FilterGroup label={`Rariteit (${availableRarities.length})`}>
-                  {availableRarities.slice(0, 10).map(([r, count]) => (
-                    <Chip
-                      key={r} active={selectedRarities.has(r)} onClick={() => toggleRarity(r)}
-                      label={r} hint={`${count}`}
-                    />
-                  ))}
-                </FilterGroup>
-              )}
-              <FilterGroup label="Prijsklasse">
-                {PRICE_BUCKETS.map((b, i) => (
-                  <Chip
-                    key={i} active={selectedBucket === i}
-                    onClick={() => { setSelectedBucket(selectedBucket === i ? null : i); setShownCount(PAGE_SIZE); }}
-                    label={b.label}
-                  />
-                ))}
-              </FilterGroup>
-              {activeFilters > 0 && (
-                <button
-                  onClick={() => { setSelectedSets(new Set()); setSelectedRarities(new Set()); setSelectedBucket(null); }}
-                  className="text-[12px] text-accent hover:underline font-medium"
-                >
-                  Wis alle filters
-                </button>
-              )}
+          {/* ERR */}
+          {err && <div className="text-neg text-sm mt-6">Fout: {err}</div>}
+
+          {/* SKELETON */}
+          {loading && results.length === 0 && q.trim().length >= 2 && (
+            <div className="fade-up max-w-[1000px] mx-auto mt-[38px] text-left space-y-4">
+              <SearchingBar />
+              <ResultGridSkeleton count={10} />
             </div>
           )}
 
-          {/* Grid */}
-          {filtered.length > 0 ? (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-                {visible.map((r) => (
-                  <a key={r.id} href={`/card/${encodeURIComponent(r.id)}`}
-                     className="group bg-surface rounded-2xl overflow-hidden hover:shadow-hover transition-all border hairline">
-                    <div className="aspect-[2.5/3.5] bg-elevated">
-                      <img src={r.image} alt={r.name} loading="lazy"
-                           className="w-full h-full object-contain p-2.5 group-hover:scale-[1.02] transition-transform" />
-                    </div>
-                    <div className="p-3.5">
-                      <div className="font-semibold text-[14px] text-ink truncate group-hover:text-accent transition">
-                        {r.name}
-                      </div>
-                      <div className="text-[11px] text-muted truncate mt-0.5">
-                        {r.setName} · #{r.number}
-                      </div>
-                      <div className="mt-2 flex items-baseline justify-between">
-                        <span className="text-[10px] text-subtle uppercase tracking-wider truncate pr-1">
-                          {r.rarity ?? "—"}
-                        </span>
-                        <span className="text-[15px] font-semibold text-ink tabular-nums whitespace-nowrap">
-                          {r.priceEUR ? `€${r.priceEUR.toFixed(2)}` : "—"}
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                ))}
-              </div>
-              {filtered.length > shownCount && (
-                <div className="flex justify-center pt-2">
+          {/* RESULTS */}
+          {results.length > 0 && (
+            <div className="fade-up max-w-[1000px] mx-auto mt-[38px] text-left">
+              <div className="flex items-baseline justify-between mb-[18px] px-1 flex-wrap gap-3">
+                <h2 className="font-display font-normal text-[26px] m-0 text-ink">
+                  Resultaten voor "{q}"
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-ink3 font-semibold text-[14px]">
+                    {filtered.length} van {results.length}
+                  </span>
                   <button
-                    onClick={() => setShownCount(shownCount + PAGE_SIZE)}
-                    className="btn-poke px-6 py-3 rounded-full text-[13px]"
+                    onClick={() => setFiltersOpen((v) => !v)}
+                    aria-expanded={filtersOpen}
+                    aria-controls="filter-panel"
+                    className={`inline-flex items-center gap-2 px-[14px] py-[8px] rounded-full text-[13px] font-semibold transition border ${
+                      filtersOpen
+                        ? "bg-accent text-white"
+                        : activeFilters > 0
+                          ? "bg-accentSoft text-accent"
+                          : "bg-card text-ink2"
+                    }`}
+                    style={{ borderColor: filtersOpen ? "#EE1515" : activeFilters > 0 ? "#EE1515" : "#C3D5EC" }}
                   >
-                    Laad meer ({Math.min(PAGE_SIZE, filtered.length - shownCount)}) · {filtered.length - shownCount} nog te zien
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                      <path d="M3 6h18M7 12h10M10 18h4" />
+                    </svg>
+                    Filter
+                    {activeFilters > 0 && (
+                      <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${filtersOpen ? "bg-white/25 text-white" : "bg-accent text-white"}`}>
+                        {activeFilters}
+                      </span>
+                    )}
                   </button>
+                  <select
+                    aria-label="Sorteer resultaten"
+                    value={sort} onChange={(e) => setSort(e.target.value as SortKey)}
+                    className="bg-card border rounded-full px-[14px] py-[8px] text-[13px] font-semibold text-ink2 outline-none cursor-pointer transition focus:border-accent"
+                    style={{ borderColor: "#C3D5EC" }}
+                  >
+                    {SORT_OPTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {filtersOpen && (
+                <div id="filter-panel" className="fade-up bg-card rounded-md border p-5 mb-5 space-y-4" style={{ borderColor: "#DCE7F4" }} role="region" aria-label="Filter opties">
+                  {availableSets.length > 1 && (
+                    <FilterGroup label={`Set (${availableSets.length})`}>
+                      {availableSets.slice(0, 12).map(([s, count]) => (
+                        <Chip key={s} active={selectedSets.has(s)} onClick={() => toggleSet(s)} label={s} hint={`${count}`} />
+                      ))}
+                    </FilterGroup>
+                  )}
+                  {availableRarities.length > 1 && (
+                    <FilterGroup label={`Rariteit (${availableRarities.length})`}>
+                      {availableRarities.slice(0, 10).map(([r, count]) => (
+                        <Chip key={r} active={selectedRarities.has(r)} onClick={() => toggleRarity(r)} label={r} hint={`${count}`} />
+                      ))}
+                    </FilterGroup>
+                  )}
+                  <FilterGroup label="Prijsklasse">
+                    {PRICE_BUCKETS.map((b, i) => (
+                      <Chip key={i} active={selectedBucket === i}
+                        onClick={() => { setSelectedBucket(selectedBucket === i ? null : i); setShownCount(PAGE_SIZE); }}
+                        label={b.label} />
+                    ))}
+                  </FilterGroup>
+                  {activeFilters > 0 && (
+                    <button
+                      onClick={() => { setSelectedSets(new Set()); setSelectedRarities(new Set()); setSelectedBucket(null); }}
+                      className="text-[12px] text-accent hover:underline font-semibold"
+                    >
+                      Wis alle filters
+                    </button>
+                  )}
                 </div>
               )}
-            </>
-          ) : (
-            <div className="text-center py-12 text-muted">
-              Geen kaarten match de actieve filters.
+
+              {filtered.length > 0 ? (
+                <>
+                  <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
+                    {visible.map((r) => <TCGCard key={r.id} card={r} />)}
+                  </div>
+                  {filtered.length > shownCount && (
+                    <div className="flex justify-center pt-6">
+                      <button
+                        onClick={() => setShownCount(shownCount + PAGE_SIZE)}
+                        className="btn-physical font-display text-[15px] px-6 py-3 rounded-full"
+                        style={{ background: "#FFCB05", color: "#0B2A4A", letterSpacing: ".5px", boxShadow: "0 3px 0 #F2B705" }}
+                      >
+                        Laad meer ({Math.min(PAGE_SIZE, filtered.length - shownCount)})
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12 text-ink3">Geen kaarten match de actieve filters.</div>
+              )}
             </div>
           )}
+
+          {!loading && q.trim().length >= 2 && results.length === 0 && !err && (
+            <ExternalSearchPanel query={q} reason="zero" />
+          )}
         </div>
-      )}
+      </section>
 
-      {!loading && q.trim().length >= 2 && results.length === 0 && !err && (
-        <ExternalSearchPanel query={q} reason="zero" />
-      )}
-
-      {results.length > 0 && filtered.length === visible.length && filtered.length >= 50 && (
-        <ExternalSearchPanel query={q} reason="completeness" />
-      )}
-
-      {q.trim().length < 2 && (
-        <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto pt-8">
-          {[
-            { t: "Zoek", d: "Type een kaartnaam, set of nummer. Resultaten direct, met live marktprijs.", n: "1" },
-            { t: "Bekijk", d: "PSA 8/9/10 schattingen, 30-dagen prijsverloop, signalen en prognose op 3 en 5 jaar.", n: "2" },
-            { t: "Beslis", d: "Quick-analyse direct. Diepere AI-analyse op verzoek via Claude.", n: "3" },
-          ].map((s) => (
-            <div key={s.t} className="bg-surface rounded-2xl p-6 border hairline">
-              <div className="w-9 h-9 rounded-full bg-accentSoft text-accent font-semibold text-sm flex items-center justify-center mb-4">
-                {s.n}
-              </div>
-              <div className="font-semibold text-ink text-[16px] mb-1.5">{s.t}</div>
-              <div className="text-[13px] text-muted leading-relaxed">{s.d}</div>
-            </div>
-          ))}
+      {/* STEPS */}
+      <section className="px-7 py-[30px] pb-24">
+        <div className="max-w-page mx-auto">
+          <div className="text-center font-bold text-[13px] uppercase text-accent mb-2.5" style={{ letterSpacing: ".14em" }}>
+            Hoe het werkt
+          </div>
+          <h2 className="text-center font-display font-normal m-0 mb-11 text-ink" style={{ fontSize: "clamp(30px, 4vw, 44px)" }}>
+            Van kaart naar cash in 3 stappen
+          </h2>
+          <div className="grid gap-[22px] md:grid-cols-3 grid-cols-1">
+            <Step n="1" title="Zoek" body="Type een kaartnaam, set of nummer. Resultaten direct, met live marktprijs." color="#EE1515" />
+            <Step n="2" title="Bekijk" body="PSA 8/9/10 schattingen, 30-dagen prijsverloop, signalen en prognose op 3 en 5 jaar." color="#2A75BB" />
+            <Step n="3" title="Beslis" body="Quick-analyse direct. Diepere AI-analyse op verzoek via Claude." color="#3FA34D" />
+          </div>
         </div>
-      )}
+      </section>
+    </>
+  );
+}
+
+// ---------- COMPONENTS ----------
+
+function TCGCard({ card }: { card: Result }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const onMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) - 0.5;
+    const py = ((e.clientY - r.top) / r.height) - 0.5;
+    el.style.transform = `perspective(800px) rotateY(${px * 9}deg) rotateX(${-py * 9}deg) translateY(-4px)`;
+  };
+  const onLeave = () => {
+    if (ref.current) ref.current.style.transform = "";
+  };
+
+  return (
+    <a
+      ref={ref}
+      href={`/card/${encodeURIComponent(card.id)}`}
+      className="group bg-card border rounded-md overflow-hidden shadow-sm text-left transition-all hover:shadow-lg"
+      style={{ borderColor: "#DCE7F4", transformStyle: "preserve-3d" }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
+      <div className="relative bg-bg2 overflow-hidden" style={{ aspectRatio: "3 / 4" }}>
+        <img src={card.image} alt={card.name} loading="lazy" className="w-full h-full object-contain p-3" />
+        <div className="tcg-art-sheen" />
+        <span
+          className="absolute top-2.5 left-2.5 z-[2] text-[11px] font-bold uppercase text-white rounded-full px-[9px] py-1"
+          style={{ background: "rgba(11,42,74,.55)", backdropFilter: "blur(4px)", letterSpacing: ".05em" }}
+        >
+          {card.setName}
+        </span>
+      </div>
+      <div className="p-[14px] pt-[14px] pb-4 px-4">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="font-display text-[24px] text-ink font-normal tabular-nums">
+            {card.priceEUR ? `€${card.priceEUR.toFixed(2)}` : "—"}
+          </span>
+          <span className="text-[10px] text-ink3 uppercase font-bold" style={{ letterSpacing: ".05em" }}>
+            #{card.number}
+          </span>
+        </div>
+        <div className="mt-2 text-[13px] text-ink2 font-semibold truncate" title={card.name}>
+          {card.name}
+        </div>
+        {card.rarity && (
+          <div className="mt-1 text-[11px] text-ink3 uppercase font-bold truncate" style={{ letterSpacing: ".04em" }}>
+            {card.rarity}
+          </div>
+        )}
+      </div>
+    </a>
+  );
+}
+
+function Step({ n, title, body, color }: { n: string; title: string; body: string; color: string }) {
+  return (
+    <div
+      className="bg-card border rounded-lg p-[30px] px-7 shadow-sm relative overflow-hidden transition-all duration-200 hover:-translate-y-1.5 hover:shadow-lg"
+      style={{ borderColor: "#DCE7F4" }}
+    >
+      <div
+        className="absolute -right-10 -top-10 w-[140px] h-[140px] rounded-full opacity-[.06]"
+        style={{ background: color }}
+      />
+      <div className="step-badge w-[54px] h-[54px] rounded-full flex items-center justify-center mb-5" style={{ background: color }}>
+        <span className="font-display text-[26px] text-white">{n}</span>
+      </div>
+      <h3 className="font-display font-normal text-[24px] m-0 mb-2.5 text-ink">{title}</h3>
+      <p className="m-0 text-ink2 text-[16px]" style={{ lineHeight: 1.55 }}>{body}</p>
     </div>
   );
 }
@@ -330,7 +437,7 @@ export default function HomePage() {
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-2">{label}</div>
+      <div className="text-[11px] font-bold uppercase text-ink3 mb-2" style={{ letterSpacing: ".05em" }}>{label}</div>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -340,10 +447,8 @@ function Chip({ active, onClick, label, hint }: { active: boolean; onClick: () =
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition flex items-center gap-1.5 ${
-        active
-          ? "bg-accent text-white"
-          : "bg-elevated text-ink hover:bg-accentSoft hover:text-accent"
+      className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition flex items-center gap-1.5 ${
+        active ? "bg-accent text-white" : "bg-bg2 text-ink2 hover:bg-accentSoft hover:text-accent"
       }`}
     >
       <span>{label}</span>
@@ -356,47 +461,33 @@ function ExternalSearchPanel({ query, reason }: { query: string; reason: "zero" 
   const q = encodeURIComponent(query);
   const pokemonQ = encodeURIComponent(`${query} pokemon`);
   const links = [
-    {
-      label: "PriceCharting",
-      url: `https://www.pricecharting.com/search-products?q=${pokemonQ}&type=prices`,
-      desc: "Volledige database incl. Japanse promo's, vintage en sealed product",
-    },
-    {
-      label: "TCGdex",
-      url: `https://tcgdex.net/series?q=${q}`,
-      desc: "Internationale TCG-database met betere Japanse coverage",
-    },
-    {
-      label: "eBay sold",
-      url: `https://www.ebay.com/sch/i.html?_nkw=${pokemonQ}&LH_Sold=1&LH_Complete=1`,
-      desc: "Actuele verkooptransacties van de laatste 90 dagen",
-    },
+    { label: "PriceCharting", url: `https://www.pricecharting.com/search-products?q=${pokemonQ}&type=prices`, desc: "Volledige database incl. Japanse promo's en sealed product" },
+    { label: "TCGdex", url: `https://tcgdex.net/series?q=${q}`, desc: "Internationale TCG-database, betere Japanse coverage" },
+    { label: "eBay sold", url: `https://www.ebay.com/sch/i.html?_nkw=${pokemonQ}&LH_Sold=1&LH_Complete=1`, desc: "Actuele verkooptransacties laatste 90 dagen" },
   ];
   return (
-    <div className={`bg-surface rounded-2xl border hairline p-6 ${reason === "zero" ? "mt-8" : "mt-8"}`}>
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-accent mb-2">
+    <div className="bg-card rounded-md border p-6 mt-8 max-w-[1000px] mx-auto text-left" style={{ borderColor: "#DCE7F4" }}>
+      <div className="text-[11px] font-bold uppercase text-accent mb-2" style={{ letterSpacing: ".14em" }}>
         {reason === "zero" ? "Niets gevonden?" : "Niet wat je zocht?"}
       </div>
-      <div className="font-semibold text-ink text-[16px] mb-2">
-        {reason === "zero"
-          ? `Geen kaart in onze database met "${query}".`
-          : "Op zoek naar een Japanse promo, vintage of sealed product?"}
+      <div className="font-display text-[22px] text-ink mb-2">
+        Geen kaart in onze database met "{query}".
       </div>
-      <p className="text-[13px] text-muted leading-relaxed mb-4 max-w-2xl">
+      <p className="text-[14px] text-ink2 mb-4 max-w-2xl" style={{ lineHeight: 1.55 }}>
         Onze data komt van pokemontcg.io — primair Engelstalig, beperkte Japanse coverage en geen sealed product.
-        Probeer een van deze externe databases met bredere dekking:
+        Probeer een van deze externe bronnen:
       </p>
       <div className="grid md:grid-cols-3 gap-3">
         {links.map((l) => (
           <a key={l.label} href={l.url} target="_blank" rel="noopener"
-             className="group block p-4 rounded-xl bg-elevated hover:bg-accentSoft transition">
+             className="group block p-4 rounded-md bg-bg2 hover:bg-accentSoft transition">
             <div className="flex items-center justify-between mb-1.5">
               <span className="font-semibold text-ink text-[14px] group-hover:text-accent transition">{l.label}</span>
-              <svg className="text-muted group-hover:text-accent transition" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="text-ink3 group-hover:text-accent transition" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 17 17 7"/><path d="M7 7h10v10"/>
               </svg>
             </div>
-            <div className="text-[11px] text-muted leading-snug">{l.desc}</div>
+            <div className="text-[11px] text-ink3" style={{ lineHeight: 1.4 }}>{l.desc}</div>
           </a>
         ))}
       </div>

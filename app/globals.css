@@ -1,39 +1,91 @@
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  background: #fbfbfd;
-  color: #1d1d1f;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-               "Helvetica Neue", system-ui, sans-serif;
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Outfit", system-ui, sans-serif;
+  color: #0B2A4A;
+  background: #F4F8FE;
+  background-image: radial-gradient(circle at 1px 1px, rgba(42,117,187,.06) 1.5px, transparent 0);
+  background-size: 26px 26px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.011em;
+  line-height: 1.5;
 }
 
 * { box-sizing: border-box; }
-
 a { color: inherit; text-decoration: none; }
-a:hover { color: #3D7DCA; }
+a:hover { color: #EE1515; }
+button { font-family: inherit; cursor: pointer; }
 
-/* Subtle Pokeball pattern background (very faint) */
-.poke-bg {
-  background-image:
-    radial-gradient(circle at 50% 50%, rgba(238, 21, 21, 0.015) 0%, transparent 60%),
-    radial-gradient(circle at 20% 80%, rgba(255, 203, 5, 0.02) 0%, transparent 50%);
+/* ----- Logo treatment (yellow fill + navy outline + drop shadow) ----- */
+.logo-treatment {
+  color: #FFCB05;
+  -webkit-text-stroke: 2.5px #0B2A4A;
+  paint-order: stroke fill;
+  text-shadow: 2px 3px 0 rgba(11,42,74,.18);
+}
+.logo-treatment-large {
+  color: #FFCB05;
+  -webkit-text-stroke: clamp(3px, .9vw, 7px) #0B2A4A;
+  paint-order: stroke fill;
+  text-shadow: 3px 5px 0 rgba(11,42,74,.22);
 }
 
-/* Animations */
-.fade-in { animation: fadeIn .35s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+/* ----- Holo rainbow shimmer ----- */
+@keyframes holo { to { background-position: 300% 0; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.holo-glow {
+  position: relative;
+}
+.holo-glow::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  background: linear-gradient(115deg, #FF3B3B, #FFCB05, #3FA34D, #2A75BB, #7C5CD6, #FF3B3B);
+  background-size: 300% 100%;
+  opacity: 0;
+  z-index: -1;
+  filter: blur(7px);
+  transition: opacity .25s cubic-bezier(0.22,1,0.36,1);
+  animation: holo 6s linear infinite;
+}
+.holo-glow:focus-within { border-color: transparent !important; }
+.holo-glow:focus-within::before { opacity: .9; }
+
+/* ----- "Physical" button (collapse on press) ----- */
+.btn-physical {
+  transition: transform .1s cubic-bezier(0.22,1,0.36,1), filter .15s cubic-bezier(0.22,1,0.36,1);
+}
+.btn-physical:hover { filter: brightness(1.03); }
+.btn-physical:active { transform: translateY(2px); }
+
+/* ----- Card-art holo sheen overlay ----- */
+.tcg-art-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: overlay;
+  opacity: .55;
+  background:
+    linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 45%, transparent 60%),
+    linear-gradient(60deg, #FF3B3B33, #FFCB0533, #3FA34D33, #2A75BB33, #7C5CD633);
+  background-size: 250% 250%;
+  animation: holo 5s linear infinite;
+  pointer-events: none;
 }
 
-/* Pokeball loading spinner — rood/wit ring met blauwe center */
+/* ----- Animations ----- */
+.fade-in { animation: fadeUp .4s cubic-bezier(0.22,1,0.36,1); }
+.fade-up { animation: fadeUp .4s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ----- Pokeball spinner (sticking with our existing pattern, restyled) ----- */
 .pokeball-spinner {
   display: inline-block;
   position: relative;
@@ -46,7 +98,7 @@ a:hover { color: #3D7DCA; }
   inset: 0;
   border-radius: 50%;
   background: linear-gradient(180deg, #EE1515 0% 50%, #ffffff 50% 100%);
-  border: 1.5px solid #1d1d1f;
+  border: 1.5px solid #0B2A4A;
   animation: pokeSpin 1s linear infinite;
 }
 .pokeball-spinner::after {
@@ -56,41 +108,33 @@ a:hover { color: #3D7DCA; }
   width: 30%; height: 30%;
   border-radius: 50%;
   background: #fff;
-  border: 1.5px solid #1d1d1f;
+  border: 1.5px solid #0B2A4A;
   transform: translate(-50%, -50%);
   z-index: 2;
 }
-@keyframes pokeSpin {
-  to { transform: rotate(360deg); }
+@keyframes pokeSpin { to { transform: rotate(360deg); } }
+
+/* ----- Step badge glossy highlight ----- */
+.step-badge {
+  box-shadow: 0 4px 0 rgba(11,42,74,.18), inset 0 0 0 4px rgba(255,255,255,.35);
+  position: relative;
+}
+.step-badge::after {
+  content: "";
+  position: absolute;
+  top: 8px; left: 9px;
+  width: 14px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.45);
 }
 
-/* Pokemon-stijl CTA: geel met blauwe text en dikke shadow voor TCG-card feel */
-.btn-poke {
-  background: #FFCB05;
-  color: #2A5A98;
-  font-weight: 700;
-  border: 2px solid #2A5A98;
-  box-shadow: 0 3px 0 #2A5A98;
-  transition: all 0.12s ease;
-}
-.btn-poke:hover {
-  background: #FFD635;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 0 #2A5A98;
-  color: #2A5A98;
-}
-.btn-poke:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 #2A5A98;
-}
-
-/* Scrollbar */
+/* ----- Scrollbar ----- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 10px; border: 2px solid #fbfbfd; }
-::-webkit-scrollbar-thumb:hover { background: #b8b8be; }
+::-webkit-scrollbar-thumb { background: #C3D5EC; border-radius: 10px; border: 2px solid #F4F8FE; }
+::-webkit-scrollbar-thumb:hover { background: #9CBADF; }
 
-.hairline { border-color: rgba(0,0,0,0.08); }
-
-/* Font helpers */
-.font-display { font-family: "Fredoka", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+/* ----- Reduced motion ----- */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

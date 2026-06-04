@@ -1,34 +1,55 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import WatchlistBadge from "./components/WatchlistBadge";
+import Pokeball from "./components/Pokeball";
 
 export const metadata: Metadata = {
   title: "Gotta Cash 'Em All — Pokemon kaart tracker",
-  description: "Zoek Pokemon kaarten. Bekijk live prijzen, PSA slab schattingen en krijg een investerings-analyse.",
+  description: "Zoek Pokemon kaarten. Live marktprijzen, PSA-schattingen, prijsverloop en investerings-analyse.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="nl">
       <body>
-        <header className="sticky top-0 z-20 backdrop-blur-nav bg-canvas/80 border-b hairline">
-          <div className="max-w-page mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="/" className="flex items-center" aria-label="Gotta Cash 'Em All">
-              <img src="/logo.png" alt="Gotta Cash 'Em All" className="h-9 w-auto" />
+        <header className="sticky top-0 z-40 backdrop-blur-nav" style={{ backdropFilter: "saturate(1.4) blur(12px)", background: "color-mix(in srgb, #F4F8FE 82%, transparent)", borderBottom: "1px solid #DCE7F4" }}>
+          <div className="max-w-page mx-auto px-7 h-[78px] flex items-center justify-between">
+            <a href="/" className="flex items-center gap-3" aria-label="Gotta Cash 'Em All home">
+              <Pokeball size={30} />
+              <span
+                className="font-display text-[27px] leading-[.9] whitespace-nowrap logo-treatment"
+                style={{ letterSpacing: ".5px", transform: "rotate(-2deg)" }}
+              >
+                Gotta Cash <span style={{ color: "#fff", WebkitTextStroke: "2.5px #0B2A4A" }}>'Em</span> All
+              </span>
             </a>
-            <nav className="flex items-center gap-7 text-[13px] text-ink/80">
-              <a href="/" className="hover:text-accent transition">Zoeken</a>
-              <a href="/watchlist" className="hover:text-accent transition flex items-center gap-1.5">
+            <nav className="flex items-center gap-2">
+              <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150" href="/">Zoeken</a>
+              <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150 inline-flex items-center gap-1.5" href="/watchlist">
                 Watchlist <WatchlistBadge />
+              </a>
+              <a
+                href="#"
+                className="btn-physical bg-accent text-white font-bold px-5 py-[11px] rounded-full text-[15px]"
+                style={{ boxShadow: "0 3px 0 #B30E0E" }}
+                aria-disabled="true"
+                title="Inloggen komt binnenkort"
+              >
+                Inloggen
               </a>
             </nav>
           </div>
         </header>
-        <main className="max-w-page mx-auto px-6 py-10">{children}</main>
-        <footer className="max-w-page mx-auto px-6 py-12 mt-16 border-t hairline">
-          <p className="text-xs text-subtle leading-relaxed max-w-2xl">
-            Prijsdata via pokemontcg.io (TCGPlayer USA + Cardmarket EU). PSA slab prijzen zijn schattingen op basis van publieke multipliers, geen werkelijke transacties. Geen beleggingsadvies.
-          </p>
+        <main id="top">{children}</main>
+        <footer className="border-t hairline mt-16" style={{ borderColor: "#DCE7F4" }}>
+          <div className="max-w-page mx-auto px-7 py-[30px] flex items-center justify-between gap-4 flex-wrap">
+            <small className="text-ink3 text-[13px]">© 2026 Gotta Cash 'Em All · Geen creditcard nodig · Gebouwd voor verzamelaars</small>
+            <div className="flex gap-[18px]">
+              <a className="text-ink2 font-semibold text-[14px] hover:text-accent transition-colors" href="#">Over</a>
+              <a className="text-ink2 font-semibold text-[14px] hover:text-accent transition-colors" href="#">Prijzen</a>
+              <a className="text-ink2 font-semibold text-[14px] hover:text-accent transition-colors" href="#">Contact</a>
+            </div>
+          </div>
         </footer>
       </body>
     </html>

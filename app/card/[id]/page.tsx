@@ -37,10 +37,10 @@ type Payload = {
 
 const verdictStyle: Record<string, string> = {
   "Sterk koop": "bg-pos text-white",
-  "Koop": "bg-pos/12 text-pos",
-  "Neutraal": "bg-elevated text-muted",
-  "Houden": "bg-pokeYellowSoft text-pokeYellowDark",
-  "Vermijden": "bg-pokeRedSoft text-pokeRed",
+  "Koop": "bg-posBg text-pos",
+  "Neutraal": "bg-bg2 text-ink3",
+  "Houden": "bg-[#FFF4CC] text-[#8a6600]",
+  "Vermijden": "bg-negBg text-neg",
 };
 
 function sourceLabel(s: string): string {
@@ -90,7 +90,7 @@ export default function CardPage({ params }: { params: { id: string } }) {
   }
 
   if (err) return <div className="text-neg">Fout: {err}</div>;
-  if (!data) return <div className="text-muted">Laden…</div>;
+  if (!data) return <div className="text-ink2">Laden…</div>;
 
   const { card, raw, prices, history, slabs, analysis } = data;
   const inList = hydrated && has(card.id);
@@ -100,8 +100,8 @@ export default function CardPage({ params }: { params: { id: string } }) {
   const tcgplayerUrl = card.tcgplayer?.url;
 
   return (
-    <div className="fade-in space-y-10">
-      <a href="/" className="inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-accent transition">
+    <div className="fade-in space-y-10 max-w-page mx-auto px-7 py-10">
+      <a href="/" className="inline-flex items-center gap-1.5 text-[13px] text-ink2 hover:text-accent transition">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
         Terug naar zoeken
       </a>
@@ -109,25 +109,25 @@ export default function CardPage({ params }: { params: { id: string } }) {
       <div className="grid md:grid-cols-[300px_1fr] gap-10">
         <div>
           <img src={card.images.large} alt={card.name}
-               className="rounded-2xl border hairline w-full shadow-card" />
+               className="rounded-md border w-full shadow-sm" />
         </div>
 
         <div className="space-y-5">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-pokeBlue mb-2">
+            <div className="text-[11px] font-semibold uppercase  text-pokeBlue mb-2">
               {card.set.name} · {card.set.series} · {card.set.releaseDate}
             </div>
             <h1 className="font-display text-4xl font-bold text-ink">{card.name}</h1>
-            <div className="text-muted text-[14px] mt-2">
+            <div className="text-ink2 text-[14px] mt-2">
               #{card.number} · {card.rarity ?? "—"}{card.artist ? ` · ${card.artist}` : ""}
             </div>
           </div>
 
           <div className="flex items-baseline gap-3 flex-wrap">
-            <div className="text-4xl font-semibold tabular-nums tracking-tight">
+            <div className="text-4xl font-semibold tabular-nums ">
               {headline ? `€${headline.toFixed(2)}` : "—"}
             </div>
-            <div className="text-[13px] text-muted">
+            <div className="text-[13px] text-ink2">
               raw marktprijs · {sourceLabel(headlineSource)}
               {prices.primaryUpdatedAt && <> · bijgewerkt {prices.primaryUpdatedAt}</>}
               {prices.primaryStale && <span className="text-pokeRed"> · stale</span>}
@@ -135,7 +135,7 @@ export default function CardPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold ${verdictStyle[analysis.verdict] ?? "bg-elevated text-muted"}`}>
+            <span className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold ${verdictStyle[analysis.verdict] ?? "bg-bg2 text-ink2"}`}>
               {analysis.verdict}
               <span className="opacity-70 text-[11px] font-normal">score {analysis.score}</span>
             </span>
@@ -147,8 +147,8 @@ export default function CardPage({ params }: { params: { id: string } }) {
               })}
               className={
                 inList
-                  ? "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-elevated text-ink hover:bg-line transition"
-                  : "btn-poke inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px]"
+                  ? "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-bg2 text-ink hover:bg-line transition"
+                  : "btn-physical inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px]"
               }
             >
               {inList ? "✓ In watchlist" : "+ Watchlist"}
@@ -156,7 +156,7 @@ export default function CardPage({ params }: { params: { id: string } }) {
 
             {cardmarketUrl && (
               <a href={cardmarketUrl} target="_blank" rel="noopener"
-                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold text-muted hover:text-accent hover:bg-elevated transition">
+                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold text-ink2 hover:text-accent hover:bg-bg2 transition">
                 Cardmarket ↗
               </a>
             )}
@@ -174,14 +174,14 @@ export default function CardPage({ params }: { params: { id: string } }) {
       <SignalsPanel signals={analysis.signals} />
       <OutlookPanel outlook={analysis.outlook} />
 
-      <div className="bg-surface rounded-2xl border hairline p-6">
+      <div className="bg-card rounded-md border p-6">
         <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-accent">Diepere AI-analyse</div>
-            <div className="text-[13px] text-muted mt-1">Claude Haiku 4.5 · ~$0,01-$0,03 per analyse</div>
+            <div className="text-[11px] font-semibold uppercase  text-accent">Diepere AI-analyse</div>
+            <div className="text-[13px] text-ink2 mt-1">Claude Haiku 4.5 · ~$0,01-$0,03 per analyse</div>
           </div>
           <button onClick={runAI} disabled={aiLoading}
-            className="px-4 py-2.5 rounded-full bg-accent text-white text-[13px] font-semibold hover:bg-accentHover disabled:opacity-50 transition">
+            className="px-4 py-2.5 rounded-full bg-accent text-white text-[13px] font-semibold hover:bg-accentDeep disabled:opacity-50 transition">
             {aiLoading ? "Genereren…" : aiText ? "Opnieuw genereren" : "Genereer AI-analyse"}
           </button>
         </div>
@@ -190,13 +190,13 @@ export default function CardPage({ params }: { params: { id: string } }) {
           <div className="text-ink text-[14px] whitespace-pre-wrap leading-relaxed">{aiText}</div>
         )}
         {!aiText && !aiErr && (
-          <div className="text-muted text-[13px]">
+          <div className="text-ink2 text-[13px]">
             Klik "Genereer AI-analyse" voor een gericht 150-200 woord oordeel met specifieke risico's en concrete actie.
           </div>
         )}
       </div>
 
-      <div className="text-[11px] text-subtle leading-relaxed">
+      <div className="text-[11px] text-ink3 leading-relaxed">
         Quick-analyse: {analysis.summary}
       </div>
     </div>
@@ -254,16 +254,16 @@ function SourcePanel({ title, subtitle, url, updatedAt, daysOld, points }: {
   const active = points.filter((p) => p.value !== null);
   const fl = freshLabel(daysOld);
   const toneColor =
-    fl.tone === "fresh" ? "bg-pos/15 text-pos" :
-    fl.tone === "ok"    ? "bg-pokeBlueSoft text-pokeBlue" :
-                          "bg-pokeRedSoft text-pokeRed";
+    fl.tone === "fresh" ? "bg-posBg text-pos" :
+    fl.tone === "ok"    ? "bg-bg2 text-pokeBlue" :
+                          "bg-negBg text-pokeRed";
 
   return (
-    <div className="bg-surface rounded-2xl border hairline p-5">
+    <div className="bg-card rounded-md border p-5">
       <div className="flex items-start justify-between gap-3 mb-1">
         <div>
           <div className="font-semibold text-ink text-[14px]">{title}</div>
-          <div className="text-[11px] text-muted mt-0.5">{subtitle}</div>
+          <div className="text-[11px] text-ink2 mt-0.5">{subtitle}</div>
         </div>
         {url && (
           <a href={url} target="_blank" rel="noopener"
@@ -277,15 +277,15 @@ function SourcePanel({ title, subtitle, url, updatedAt, daysOld, points }: {
           <span className={`w-1.5 h-1.5 rounded-full ${fl.tone === "fresh" ? "bg-pos" : fl.tone === "ok" ? "bg-pokeBlue" : "bg-pokeRed"}`} />
           {fl.text}
         </span>
-        {updatedAt && <span className="text-[10px] text-subtle">{updatedAt}</span>}
+        {updatedAt && <span className="text-[10px] text-ink3">{updatedAt}</span>}
       </div>
       {active.length === 0 ? (
-        <div className="text-[12px] text-subtle italic">Geen data beschikbaar uit deze bron.</div>
+        <div className="text-[12px] text-ink3 italic">Geen data beschikbaar uit deze bron.</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {active.map((p) => (
-            <div key={p.label} className="p-2.5 rounded-lg bg-elevated">
-              <div className="text-[10px] uppercase tracking-wider text-muted mb-1" title={p.hint}>{p.label}</div>
+            <div key={p.label} className="p-2.5 rounded-lg bg-bg2">
+              <div className="text-[10px] uppercase  text-ink2 mb-1" title={p.hint}>{p.label}</div>
               <div className="text-[15px] font-semibold tabular-nums text-ink">€{p.value!.toFixed(2)}</div>
             </div>
           ))}
@@ -297,25 +297,25 @@ function SourcePanel({ title, subtitle, url, updatedAt, daysOld, points }: {
 
 function SlabPanel({ slabs }: { slabs: Slab[] }) {
   if (!slabs.length) return (
-    <div className="bg-surface rounded-2xl p-5 border hairline text-sm text-muted">
+    <div className="bg-card rounded-md p-5 border text-sm text-ink2">
       Geen prijsdata voor PSA-schatting.
     </div>
   );
   return (
-    <div className="bg-surface rounded-2xl p-5 border hairline">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-4">Geschatte PSA slab prijzen · EUR</div>
+    <div className="bg-card rounded-md p-5 border">
+      <div className="text-[11px] font-semibold uppercase  text-ink2 mb-4">Geschatte PSA slab prijzen · EUR</div>
       <div className="space-y-3">
         {slabs.map((s) => (
           <div key={s.grade} className="flex items-center justify-between border-b last:border-0 hairline pb-3 last:pb-0">
             <div>
               <div className="font-semibold text-ink text-[15px]">{s.grade}</div>
-              <div className="text-[11px] text-subtle mt-0.5">range €{s.low} – €{s.high}</div>
+              <div className="text-[11px] text-ink3 mt-0.5">range €{s.low} – €{s.high}</div>
             </div>
             <div className="text-[20px] font-semibold tabular-nums">€{s.mid}</div>
           </div>
         ))}
       </div>
-      <div className="text-[11px] text-subtle mt-4 leading-relaxed">
+      <div className="text-[11px] text-ink3 mt-4 leading-relaxed">
         Schatting via raw × multiplier. Echte eBay sold data komt zodra dev account goedgekeurd is.
       </div>
     </div>
@@ -325,11 +325,11 @@ function SlabPanel({ slabs }: { slabs: Slab[] }) {
 function SignalsPanel({ signals }: { signals: Sig[] }) {
   if (!signals.length) return null;
   return (
-    <div className="bg-surface rounded-2xl p-6 border hairline">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-4">Signalen</div>
+    <div className="bg-card rounded-md p-6 border">
+      <div className="text-[11px] font-semibold uppercase  text-ink2 mb-4">Signalen</div>
       <div className="grid md:grid-cols-2 gap-3">
         {signals.map((s, i) => (
-          <div key={i} className={`p-4 rounded-xl border ${s.positive ? "bg-pos/5 border-pos/25" : "bg-neg/5 border-neg/25"}`}>
+          <div key={i} className={`p-4 rounded-md border ${s.positive ? "bg-posBg border-pos" : "bg-negBg border-neg"}`}>
             <div className={`font-semibold text-[14px] ${s.positive ? "text-pos" : "text-neg"}`}>
               {s.positive ? "✓" : "✕"} {s.label}
             </div>
@@ -343,18 +343,18 @@ function SignalsPanel({ signals }: { signals: Sig[] }) {
 
 function OutlookPanel({ outlook }: { outlook: Outlook[] }) {
   return (
-    <div className="bg-surface rounded-2xl p-6 border hairline">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-4">Prognose</div>
+    <div className="bg-card rounded-md p-6 border">
+      <div className="text-[11px] font-semibold uppercase  text-ink2 mb-4">Prognose</div>
       <div className="grid grid-cols-3 gap-4">
         {outlook.map((o) => (
-          <div key={o.horizon} className="p-5 rounded-xl bg-elevated">
-            <div className="text-[11px] uppercase tracking-wider text-muted mb-2">{o.horizon}</div>
+          <div key={o.horizon} className="p-5 rounded-md bg-bg2">
+            <div className="text-[11px] uppercase  text-ink2 mb-2">{o.horizon}</div>
             <div className="text-[28px] font-semibold tabular-nums text-accent">{o.base}</div>
-            <div className="text-[11px] text-muted mt-1.5 tabular-nums">bear {o.bear} · bull {o.bull}</div>
+            <div className="text-[11px] text-ink2 mt-1.5 tabular-nums">bear {o.bear} · bull {o.bull}</div>
           </div>
         ))}
-        <div className="p-5 rounded-xl bg-elevated">
-          <div className="text-[11px] uppercase tracking-wider text-muted mb-2">Methode</div>
+        <div className="p-5 rounded-md bg-bg2">
+          <div className="text-[11px] uppercase  text-ink2 mb-2">Methode</div>
           <div className="text-[12px] text-ink/85 leading-snug">
             Base case op set-leeftijd, rariteit, IP-kracht, prijsniveau en 30-dagen trend.
           </div>

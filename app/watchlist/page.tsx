@@ -38,13 +38,13 @@ export default function WatchlistPage() {
     });
   }, [hydrated, items.length]);
 
-  if (!hydrated) return <div className="text-muted">Laden…</div>;
+  if (!hydrated) return <div className="text-ink2 max-w-page mx-auto px-7 py-10">Laden…</div>;
 
   return (
-    <div className="fade-in space-y-8">
+    <div className="fade-in space-y-8 max-w-page mx-auto px-7 py-10">
       <div>
         <h1 className="font-display text-4xl font-bold text-ink">Watchlist</h1>
-        <p className="text-muted text-[15px] mt-2">
+        <p className="text-ink2 text-[15px] mt-2">
           {items.length === 0
             ? "Voeg kaarten toe via de + Watchlist-knop op een kaartpagina."
             : `${items.length} kaart${items.length === 1 ? "" : "en"} opgeslagen. Prijzen worden live bijgewerkt.`}
@@ -52,14 +52,14 @@ export default function WatchlistPage() {
       </div>
 
       {items.length === 0 && (
-        <div className="bg-surface rounded-2xl p-12 border hairline text-center">
+        <div className="bg-card rounded-md p-12 border text-center">
           <div className="text-6xl mb-4">📊</div>
           <div className="font-semibold text-ink text-[18px] mb-2">Nog geen kaarten</div>
-          <div className="text-muted text-[14px] mb-6 max-w-md mx-auto">
+          <div className="text-ink2 text-[14px] mb-6 max-w-md mx-auto">
             Zoek een kaart en gebruik de "+ Watchlist" knop om hem hier op te slaan.
             Bij elk bezoek zie je actuele prijs + verschil sinds toevoeging.
           </div>
-          <a href="/" className="btn-poke inline-block px-5 py-2.5 rounded-full text-[13px]">
+          <a href="/" className="btn-physical inline-block px-5 py-2.5 rounded-full text-[13px]">
             Begin met zoeken
           </a>
         </div>
@@ -95,7 +95,7 @@ function WatchlistRow({
   const since = new Date(item.addedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <div className="bg-surface rounded-2xl border hairline p-4 flex items-center gap-5 hover:shadow-card transition">
+    <div className="bg-card rounded-md border p-4 flex items-center gap-5 hover:shadow-sm transition">
       <a href={`/card/${encodeURIComponent(item.id)}`} className="flex-shrink-0">
         <img src={item.image} alt={item.name} className="w-14 h-20 object-contain rounded-lg" />
       </a>
@@ -103,19 +103,19 @@ function WatchlistRow({
       <div className="flex-1 min-w-0">
         <a href={`/card/${encodeURIComponent(item.id)}`} className="block">
           <div className="font-semibold text-ink text-[15px] truncate hover:text-accent transition">{item.name}</div>
-          <div className="text-[12px] text-muted truncate">{item.setName} · toegevoegd {since}</div>
+          <div className="text-[12px] text-ink2 truncate">{item.setName} · toegevoegd {since}</div>
         </a>
       </div>
 
       <div className="flex-shrink-0 text-right min-w-[120px]">
-        <div className="text-[11px] text-muted uppercase tracking-wider">Toegevoegd</div>
+        <div className="text-[11px] text-ink2 uppercase ">Toegevoegd</div>
         <div className="text-[14px] tabular-nums text-ink">
           {noted ? `€${noted.toFixed(2)}` : "—"}
         </div>
       </div>
 
       <div className="flex-shrink-0 text-right min-w-[130px]">
-        <div className="text-[11px] text-muted uppercase tracking-wider">Nu</div>
+        <div className="text-[11px] text-ink2 uppercase ">Nu</div>
         <div className="text-[16px] tabular-nums font-semibold text-ink">
           {loading ? "…" : live?.raw ? `€${live.raw.toFixed(2)}` : "—"}
         </div>
@@ -129,7 +129,7 @@ function WatchlistRow({
       <button
         onClick={onRemove}
         title="Verwijder uit watchlist"
-        className="flex-shrink-0 w-9 h-9 rounded-full bg-elevated hover:bg-neg/10 hover:text-neg text-muted flex items-center justify-center transition"
+        className="flex-shrink-0 w-9 h-9 rounded-full bg-bg2 hover:bg-neg/10 hover:text-neg text-ink2 flex items-center justify-center transition"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
