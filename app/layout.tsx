@@ -12,9 +12,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="nl">
       <body>
         <header className="sticky top-0 z-20 backdrop-blur-nav bg-canvas/80 border-b hairline">
-          <div className="max-w-page mx-auto px-6 h-14 flex items-center justify-between">
-            <a href="/" className="font-semibold tracking-tight text-ink text-[15px]">
-              Gotta Cash <span className="text-accent">'Em All</span>
+          <div className="max-w-page mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" className="flex items-center" aria-label="Gotta Cash 'Em All">
+              <img src="/logo.png" alt="Gotta Cash 'Em All" className="h-9 w-auto" />
             </a>
             <nav className="flex items-center gap-7 text-[13px] text-ink/80">
               <a href="/" className="hover:text-accent transition">Zoeken</a>

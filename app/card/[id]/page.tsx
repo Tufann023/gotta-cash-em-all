@@ -8,9 +8,16 @@ type Sig = { label: string; positive: boolean; reason: string };
 type Outlook = { horizon: string; base: string; bear: string; bull: string };
 type Analysis = { verdict: string; score: number; signals: Sig[]; outlook: Outlook[]; summary: string };
 
+type PriceDetail = {
+  lowPriceExPlus: number | null; lowPrice: number | null; trendPrice: number | null;
+  averageSellPrice: number | null; avg1: number | null; avg7: number | null;
+  avg30: number | null; updatedAt: string | null; source: string;
+};
+
 type Payload = {
   card: any;
   raw: number | null;
+  prices: PriceDetail;
   history: { label: string; price: number }[];
   slabs: Slab[];
   analysis: Analysis;
@@ -23,6 +30,13 @@ const verdictStyle: Record<string, string> = {
   "Houden": "bg-warn/12 text-warn",
   "Vermijden": "bg-neg/12 text-neg",
 };
+
+function daysSince(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr.replace(/\//g, "-"));
+  if (isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+}
 
 export default function CardPage({ params }: { params: { id: string } }) {
   const [data, setData] = useState<Payload | null>(null);
@@ -60,8 +74,11 @@ export default function CardPage({ params }: { params: { id: string } }) {
   if (err) return <div className="text-neg">Fout: {err}</div>;
   if (!data) return <div className="text-muted">Laden…</div>;
 
-  const { card, raw, history, slabs, analysis } = data;
+  const { card, raw, prices, history, slabs, analysis } = data;
   const inList = hydrated && has(card.id);
+  const stale = daysSince(prices.updatedAt);
+  const headline = prices.lowPriceExPlus || prices.trendPrice || raw;
+  const cardmarketUrl = card.cardmarket?.url;
 
   return (
     <div className="fade-in space-y-10">
@@ -87,12 +104,23 @@ export default function CardPage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-baseline gap-3 flex-wrap">
             <div className="text-4xl font-semibold tabular-nums tracking-tight">
-              {raw ? `€${raw.toFixed(2)}` : "—"}
+              {headline ? `€${headline.toFixed(2)}` : "—"}
             </div>
-            <div className="text-[13px] text-muted">huidige raw marktprijs · Cardmarket</div>
+            <div className="text-[13px] text-muted">
+              {prices.lowPriceExPlus ? "vanaf NM+ · Cardmarket" : "raw marktprijs · Cardmarket"}
+            </div>
           </div>
+
+          {stale !== null && stale > 90 && (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warn/10 text-warn text-[12px]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+              Data is {stale} dagen oud — Cardmarket-snapshot via pokemontcg.io. {cardmarketUrl && (
+                <a href={cardmarketUrl} target="_blank" rel="noopener" className="underline hover:no-underline">Check live</a>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-3">
             <span className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold ${verdictStyle[analysis.verdict] ?? "bg-elevated text-muted"}`}>
@@ -103,7 +131,7 @@ export default function CardPage({ params }: { params: { id: string } }) {
             <button
               onClick={() => inList ? remove(card.id) : add({
                 id: card.id, name: card.name, setName: card.set.name,
-                image: card.images.small, notedPriceEUR: raw,
+                image: card.images.small, notedPriceEUR: headline,
               })}
               className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold transition ${
                 inList
@@ -113,9 +141,18 @@ export default function CardPage({ params }: { params: { id: string } }) {
             >
               {inList ? "✓ In watchlist" : "+ Watchlist"}
             </button>
+
+            {cardmarketUrl && (
+              <a href={cardmarketUrl} target="_blank" rel="noopener"
+                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold text-muted hover:text-accent hover:bg-elevated transition">
+                Cardmarket ↗
+              </a>
+            )}
           </div>
         </div>
       </div>
+
+      <PricePanel prices={prices} />
 
       <div className="grid md:grid-cols-2 gap-5">
         <PriceChart data={history} />
@@ -142,13 +179,46 @@ export default function CardPage({ params }: { params: { id: string } }) {
         )}
         {!aiText && !aiErr && (
           <div className="text-muted text-[13px]">
-            Klik "Genereer AI-analyse" voor een gericht 150-200 woord oordeel met specifieke risico's en concrete actie. Vereist een Anthropic API-key in <code className="bg-elevated px-1.5 py-0.5 rounded text-[12px]">.env.local</code>.
+            Klik "Genereer AI-analyse" voor een gericht 150-200 woord oordeel met specifieke risico's en concrete actie.
           </div>
         )}
       </div>
 
       <div className="text-[11px] text-subtle leading-relaxed">
         Quick-analyse: {analysis.summary}
+      </div>
+    </div>
+  );
+}
+
+function PricePanel({ prices }: { prices: PriceDetail }) {
+  const points: { label: string; value: number | null; hint?: string }[] = [
+    { label: "Vanaf (NM+)",        value: prices.lowPriceExPlus, hint: "Laagste vraagprijs near-mint of beter" },
+    { label: "Trend",              value: prices.trendPrice,     hint: "Cardmarket's algoritmische fair value" },
+    { label: "Gem. verkoop",       value: prices.averageSellPrice, hint: "Gemiddelde van recente verkopen" },
+    { label: "30 dgn gemiddeld",   value: prices.avg30 },
+    { label: "7 dgn gemiddeld",    value: prices.avg7 },
+    { label: "Allerlaagste",       value: prices.lowPrice,       hint: "Incl. beschadigde / lagere conditie" },
+  ];
+  const active = points.filter((p) => p.value !== null);
+  if (active.length === 0) return null;
+  return (
+    <div className="bg-surface rounded-2xl border hairline p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+          Alle prijsindicatoren · Cardmarket
+        </div>
+        {prices.updatedAt && (
+          <div className="text-[11px] text-subtle">Snapshot {prices.updatedAt}</div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {active.map((p) => (
+          <div key={p.label} className="p-3 rounded-xl bg-elevated">
+            <div className="text-[10px] uppercase tracking-wider text-muted mb-1.5" title={p.hint}>{p.label}</div>
+            <div className="text-[18px] font-semibold tabular-nums text-ink">€{p.value!.toFixed(2)}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -175,7 +245,7 @@ function SlabPanel({ slabs }: { slabs: Slab[] }) {
         ))}
       </div>
       <div className="text-[11px] text-subtle mt-4 leading-relaxed">
-        Schatting via raw × multiplier, gekalibreerd op publieke verkopen. Werkelijke transacties kunnen ±40% afwijken.
+        Schatting via raw × multiplier. Echte eBay sold data komt zodra dev account goedgekeurd is.
       </div>
     </div>
   );

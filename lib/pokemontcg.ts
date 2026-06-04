@@ -34,6 +34,7 @@ export type Card = {
     prices?: {
       averageSellPrice?: number;
       lowPrice?: number;
+      lowPriceExPlus?: number;
       trendPrice?: number;
       avg1?: number;
       avg7?: number;
@@ -63,20 +64,17 @@ async function runQuery(qParam: string, pageSize: number): Promise<Card[]> {
   return (json.data as Card[]) ?? [];
 }
 
-// Slimme zoekfunctie die multi-token queries opbouwt.
-// Voorbeelden:
-//   "charizard"            → name:charizard*
-//   "charizard 151"        → name:charizard* AND (set:151 OR number:151)
-//   "umbreon evolving"     → name:umbreon* AND set.name:*evolving*
-//   "mega charizard x"     → name:"mega charizard x*"  (long name, geen set hint)
-export async function searchCards(q: string, pageSize = 30): Promise<Card[]> {
+// Slimme zoekfunctie die multi-token queries opbouwt en parallel uitvoert.
+// Geeft tot ~250 unieke resultaten terug (dedupe + ranking).
+// Frontend handelt verdere pagination/filtering af.
+export async function searchCards(q: string, perSubQuery = 100): Promise<Card[]> {
   const query = q.trim();
   if (!query) return [];
 
   const tokens = query.split(/\s+/);
   const queries: string[] = [];
 
-  // Altijd: pure name search met volledige query
+  // Pure name search met volledige query (breed)
   queries.push(`name:"${query}*"`);
 
   if (tokens.length >= 2) {
@@ -93,16 +91,13 @@ export async function searchCards(q: string, pageSize = 30): Promise<Card[]> {
     queries.push(`name:"${last}*" set.name:"*${allButLast}*"`);
   }
 
-  // Numeric only? Probeer set search
   if (/^\d+$/.test(query)) {
     queries.push(`set.name:"*${query}*"`);
     queries.push(`set.id:"*${query}*"`);
   }
 
-  // Run alle queries parallel
-  const results = await Promise.all(queries.map((q) => runQuery(q, pageSize)));
+  const results = await Promise.all(queries.map((q) => runQuery(q, perSubQuery)));
 
-  // Dedupe op id, behoud volgorde van eerste hit
   const seen = new Set<string>();
   const merged: Card[] = [];
   for (const list of results) {
@@ -114,7 +109,7 @@ export async function searchCards(q: string, pageSize = 30): Promise<Card[]> {
     }
   }
 
-  // Rank: kaarten waar naam EN set match scoren beter
+  // Ranking
   const lower = query.toLowerCase();
   const queryTokens = tokens.map((t) => t.toLowerCase());
   merged.sort((a, b) => {
@@ -123,16 +118,13 @@ export async function searchCards(q: string, pageSize = 30): Promise<Card[]> {
       const s = (c.set.name || "").toLowerCase();
       const id = c.set.id.toLowerCase();
       let sc = 0;
-      // exact prefix match op naam = sterk signaal
       if (n.startsWith(lower)) sc += 50;
-      // alle tokens komen voor in name of set
       for (const t of queryTokens) {
         if (n.includes(t)) sc += 10;
         if (s.includes(t)) sc += 8;
         if (id.includes(t)) sc += 6;
         if (c.number === t) sc += 15;
       }
-      // Nieuwer = iets hoger
       const year = parseInt(c.set.releaseDate?.slice(0, 4) || "2000", 10);
       sc += (year - 2000) * 0.1;
       return sc;
@@ -140,7 +132,7 @@ export async function searchCards(q: string, pageSize = 30): Promise<Card[]> {
     return score(b) - score(a);
   });
 
-  return merged.slice(0, pageSize);
+  return merged;
 }
 
 export async function getCard(id: string): Promise<Card | null> {
@@ -152,18 +144,73 @@ export async function getCard(id: string): Promise<Card | null> {
   return json.data as Card;
 }
 
-// Helper: get the most-relevant raw market price in EUR
+// Helper: get the most-relevant raw market price in EUR.
+// Voorkeur: lowPriceExPlus (laagste vraagprijs voor NM+/EX+ conditie) — meest
+// actiebaar; valt terug op trendPrice (Cardmarket's fair value).
 export function rawMarketEUR(card: Card): number | null {
   const cm = card.cardmarket?.prices;
   if (cm) {
-    return cm.trendPrice ?? cm.averageSellPrice ?? cm.avg30 ?? null;
+    const candidate = cm.trendPrice || cm.averageSellPrice || cm.avg30;
+    return candidate && candidate > 0 ? candidate : null;
   }
   const tcg = card.tcgplayer?.prices;
   if (tcg) {
     const variant = tcg.holofoil ?? tcg.reverseHolofoil ?? tcg.normal;
-    if (variant?.market) return variant.market * 0.92; // crude USD→EUR
+    if (variant?.market) return variant.market * 0.92;
   }
   return null;
+}
+
+export type PriceDetail = {
+  lowPriceExPlus: number | null;  // vanaf-prijs NM+
+  lowPrice: number | null;        // laagste asking (incl. beschadigd)
+  trendPrice: number | null;      // Cardmarket fair value
+  averageSellPrice: number | null;
+  avg1: number | null;
+  avg7: number | null;
+  avg30: number | null;
+  updatedAt: string | null;
+  source: "cardmarket" | "tcgplayer" | "none";
+};
+
+export function priceDetail(card: Card): PriceDetail {
+  const cm = card.cardmarket;
+  const p = cm?.prices;
+  if (p && (p.trendPrice || p.averageSellPrice || p.lowPrice)) {
+    return {
+      lowPriceExPlus: (p as any).lowPriceExPlus || null,
+      lowPrice: p.lowPrice || null,
+      trendPrice: p.trendPrice || null,
+      averageSellPrice: p.averageSellPrice || null,
+      avg1: p.avg1 || null,
+      avg7: p.avg7 || null,
+      avg30: p.avg30 || null,
+      updatedAt: cm?.updatedAt || null,
+      source: "cardmarket",
+    };
+  }
+  const tcg = card.tcgplayer;
+  const tp = tcg?.prices;
+  if (tp) {
+    const v = tp.holofoil ?? tp.reverseHolofoil ?? tp.normal;
+    if (v) {
+      const rate = 0.92;
+      return {
+        lowPriceExPlus: v.low ? +(v.low * rate).toFixed(2) : null,
+        lowPrice: v.low ? +(v.low * rate).toFixed(2) : null,
+        trendPrice: v.market ? +(v.market * rate).toFixed(2) : null,
+        averageSellPrice: v.mid ? +(v.mid * rate).toFixed(2) : null,
+        avg1: null, avg7: null, avg30: null,
+        updatedAt: tcg?.updatedAt || null,
+        source: "tcgplayer",
+      };
+    }
+  }
+  return {
+    lowPriceExPlus: null, lowPrice: null, trendPrice: null,
+    averageSellPrice: null, avg1: null, avg7: null, avg30: null,
+    updatedAt: null, source: "none",
+  };
 }
 
 export function priceHistoryEUR(card: Card): { label: string; price: number }[] {

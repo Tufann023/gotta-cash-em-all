@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCard, rawMarketEUR, priceHistoryEUR } from "@/lib/pokemontcg";
+import { getCard, rawMarketEUR, priceHistoryEUR, priceDetail } from "@/lib/pokemontcg";
 import { estimateSlabs } from "@/lib/psa";
 import { analyseCard } from "@/lib/analysis";
 
@@ -14,6 +14,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     return NextResponse.json({
       card,
       raw,
+      prices: priceDetail(card),
       history: priceHistoryEUR(card),
       slabs: estimateSlabs(card, raw),
       analysis: analyseCard(card),
