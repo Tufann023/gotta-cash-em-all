@@ -16,13 +16,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-40 backdrop-blur-nav" style={{ backdropFilter: "saturate(1.4) blur(12px)", background: "color-mix(in srgb, #F4F8FE 82%, transparent)", borderBottom: "1px solid #DCE7F4" }}>
           <div className="max-w-page mx-auto px-4 md:px-7 h-[78px] flex items-center justify-between gap-3">
             <a href="/" className="flex items-center gap-2.5 md:gap-3 min-w-0" aria-label="Gotta Cash 'Em All home">
-              <Pokeball size={30} />
-              <span
-                className="font-display text-[19px] sm:text-[22px] md:text-[27px] leading-[.9] whitespace-nowrap logo-treatment truncate"
-                style={{ letterSpacing: ".5px", transform: "rotate(-2deg)" }}
-              >
-                Gotta Cash <span style={{ color: "#fff", WebkitTextStroke: "2.5px #0B2A4A" }}>'Em</span> All
-              </span>
+              <Pokeball size={28} className="md:w-[30px] md:h-[30px]" />
+              <img
+                src="/logo.png"
+                alt="Gotta Cash 'Em All"
+                className="h-7 sm:h-8 md:h-10 w-auto select-none pointer-events-none"
+                draggable={false}
+              />
             </a>
             <nav className="hidden md:flex items-center gap-2">
               <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150" href="/">Zoeken</a>
