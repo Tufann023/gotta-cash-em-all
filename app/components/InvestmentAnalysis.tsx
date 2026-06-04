@@ -85,14 +85,15 @@ function EmptyAnalysisCTA({ loading, err, onRun }: { loading: boolean; err: stri
       <div className="absolute -right-12 -top-12 w-[180px] h-[180px] rounded-full opacity-[.06]" style={{ background: "#EE1515" }} />
       <div className="relative">
         <div className="text-[11px] font-bold uppercase text-accent mb-2" style={{ letterSpacing: ".14em" }}>
-          AI Investerings-analyse
+          Slim advies
         </div>
         <h2 className="font-display text-[28px] md:text-[34px] text-ink m-0 mb-2" style={{ fontWeight: 400 }}>
-          Krijg een gericht advies van Claude
+          Moet je deze kaart kopen?
         </h2>
         <p className="text-ink2 text-[14px] mb-5 max-w-xl" style={{ lineHeight: 1.55 }}>
-          Verdict (Koop/Houden/Vermijden), prijsverwachting voor 3, 5 en 10 jaar (bear/base/bull),
-          catalysten, risico's, koop- en verkoopniveaus, en vergelijkbare kaarten. Alles in 1 analyse.
+          We laten Claude (AI) deze kaart bekijken en geven je een eerlijk advies in gewone taal:
+          wel of niet kopen, wat hij over 3, 5 en 10 jaar waard kan zijn, wanneer je 'm moet kopen of verkopen,
+          en welke vergelijkbare kaarten interessant zijn.
         </p>
         <button
           onClick={onRun}
@@ -103,17 +104,17 @@ function EmptyAnalysisCTA({ loading, err, onRun }: { loading: boolean; err: stri
           {loading ? (
             <>
               <span className="pokeball-spinner" />
-              Genereren…
+              Even kijken…
             </>
           ) : (
             <>
-              ⚡ Genereer analyse
+              ⚡ Vraag advies
             </>
           )}
         </button>
         {err && <div className="text-neg text-[13px] mt-3">{err}</div>}
         <div className="text-[11px] text-ink3 mt-3">
-          Claude Haiku 4.5 · ~$0,02 per analyse · 5-10 seconden
+          Duurt ongeveer 5-10 seconden
         </div>
       </div>
     </div>
@@ -133,15 +134,15 @@ function VerdictHero({ analysis, onRegen, loading }: { analysis: AIAnalysis; onR
       <div className="relative">
         <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
           <div className="text-[11px] font-bold uppercase text-accent" style={{ letterSpacing: ".14em" }}>
-            AI Investerings-analyse · Claude
+            Ons advies
           </div>
           <button
             onClick={onRegen}
             disabled={loading}
             className="text-[11px] font-semibold text-ink3 hover:text-accent transition inline-flex items-center gap-1.5 disabled:opacity-50"
-            title="Genereer opnieuw"
+            title="Vraag opnieuw advies"
           >
-            {loading ? <span className="pokeball-spinner" /> : <>↻</>} Opnieuw
+            {loading ? <span className="pokeball-spinner" /> : <>↻</>} Opnieuw vragen
           </button>
         </div>
 
@@ -157,7 +158,7 @@ function VerdictHero({ analysis, onRegen, loading }: { analysis: AIAnalysis; onR
               {analysis.verdict}
             </h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[11px] uppercase font-bold text-ink3" style={{ letterSpacing: ".1em" }}>Confidence</span>
+              <span className="text-[11px] uppercase font-bold text-ink3" style={{ letterSpacing: ".1em" }}>Hoe zeker?</span>
               <span className="flex gap-1">
                 {[1, 2, 3].map((i) => (
                   <span key={i} className="w-2 h-2 rounded-full" style={{ background: i <= confDots ? t.arc : "#DCE7F4" }} />
@@ -187,14 +188,17 @@ function VerdictHero({ analysis, onRegen, loading }: { analysis: AIAnalysis; onR
 function ForecastsGrid({ forecasts, currentPriceEUR }: { forecasts: AIAnalysis["forecasts"]; currentPriceEUR: number | null }) {
   return (
     <div className="bg-card rounded-md border p-5 md:p-6" style={{ borderColor: "#DCE7F4", boxShadow: "0 1px 2px rgba(11,42,74,.06), 0 2px 8px rgba(11,42,74,.05)" }}>
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 className="font-display text-[22px] text-ink m-0" style={{ fontWeight: 400 }}>Prijsverwachting</h3>
+      <div className="flex items-baseline justify-between mb-1 flex-wrap gap-2">
+        <h3 className="font-display text-[22px] text-ink m-0" style={{ fontWeight: 400 }}>Wat is hij straks waard?</h3>
         {currentPriceEUR && (
-          <div className="text-[11px] uppercase font-bold text-ink3" style={{ letterSpacing: ".1em" }}>
-            Nu: <span className="text-ink font-display ml-1" style={{ fontSize: 14 }}>€{currentPriceEUR.toFixed(0)}</span>
+          <div className="text-[12px] text-ink3">
+            Hij kost nu <span className="text-ink font-semibold tabular-nums">€{currentPriceEUR.toFixed(0)}</span>
           </div>
         )}
       </div>
+      <p className="text-[12px] text-ink3 m-0 mb-4" style={{ lineHeight: 1.5 }}>
+        We laten 3 scenario's zien: het is een schatting, niet zeker. Het grote getal is wat we het meest waarschijnlijk vinden.
+      </p>
       <div className="grid md:grid-cols-3 gap-3 md:gap-4">
         {forecasts.map((f, i) => (
           <ForecastCard key={i} f={f} currentPriceEUR={currentPriceEUR} />
@@ -205,43 +209,45 @@ function ForecastsGrid({ forecasts, currentPriceEUR }: { forecasts: AIAnalysis["
 }
 
 function ForecastCard({ f, currentPriceEUR }: { f: AIAnalysis["forecasts"][0]; currentPriceEUR: number | null }) {
-  const baseROI = currentPriceEUR ? ((f.baseEUR - currentPriceEUR) / currentPriceEUR) * 100 : null;
-  const bullROI = currentPriceEUR ? ((f.bullEUR - currentPriceEUR) / currentPriceEUR) * 100 : null;
-  const bearROI = currentPriceEUR ? ((f.bearEUR - currentPriceEUR) / currentPriceEUR) * 100 : null;
-  const roiColor = baseROI !== null && baseROI > 0 ? "#1f7a32" : "#b3261e";
+  const diff = currentPriceEUR ? f.baseEUR - currentPriceEUR : null;
+  const diffPct = currentPriceEUR ? ((f.baseEUR - currentPriceEUR) / currentPriceEUR) * 100 : null;
+  const diffColor = diff !== null && diff > 0 ? "#1f7a32" : "#b3261e";
+  const sign = diff !== null && diff >= 0 ? "+" : "";
 
   return (
     <div className="rounded-md border p-4" style={{ borderColor: "#DCE7F4", background: "#F4F8FE" }}>
       <div className="text-[11px] uppercase font-bold text-ink3 mb-1.5" style={{ letterSpacing: ".1em" }}>
-        {f.horizon}
+        Over {f.horizon}
       </div>
-      <div className="flex items-baseline gap-2 mb-3">
-        <span className="font-display text-[32px] text-ink leading-none" style={{ fontWeight: 400 }}>
-          €{f.baseEUR.toLocaleString("nl-NL")}
-        </span>
-        {baseROI !== null && (
-          <span className="text-[13px] font-bold tabular-nums" style={{ color: roiColor }}>
-            {baseROI >= 0 ? "+" : ""}{baseROI.toFixed(0)}%
+      <div className="font-display text-[32px] text-ink leading-none mb-1" style={{ fontWeight: 400 }}>
+        €{f.baseEUR.toLocaleString("nl-NL")}
+      </div>
+      {diff !== null && (
+        <div className="text-[13px] font-semibold mb-3" style={{ color: diffColor }}>
+          {sign}€{Math.abs(diff).toFixed(0)} ({sign}{diffPct?.toFixed(0)}%) vanaf nu
+        </div>
+      )}
+
+      <div className="mt-3 rounded p-2.5" style={{ background: "rgba(255,255,255,.6)" }}>
+        <div className="text-[10px] uppercase font-bold text-ink3 mb-1.5" style={{ letterSpacing: ".06em" }}>Het zou kunnen zijn tussen</div>
+        <div className="flex items-center justify-between gap-2 text-[12px]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-ink3">↓</span>
+            <span className="text-ink font-semibold tabular-nums">€{f.bearEUR.toLocaleString("nl-NL")}</span>
           </span>
-        )}
+          <span className="text-ink3">en</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-ink font-semibold tabular-nums">€{f.bullEUR.toLocaleString("nl-NL")}</span>
+            <span className="text-ink3">↑</span>
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-2 text-[10px] text-ink3 mt-1">
+          <span>als het tegenzit</span>
+          <span>als het meezit</span>
+        </div>
       </div>
-      <div className="flex items-center gap-3 text-[11px] mb-3">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#b3261e" }} />
-          <span className="text-ink3 font-semibold uppercase" style={{ letterSpacing: ".06em" }}>Bear</span>
-          <span className="text-ink font-semibold tabular-nums">€{f.bearEUR.toLocaleString("nl-NL")}</span>
-          {bearROI !== null && <span className="text-ink3 tabular-nums">({bearROI >= 0 ? "+" : ""}{bearROI.toFixed(0)}%)</span>}
-        </span>
-      </div>
-      <div className="flex items-center gap-3 text-[11px] mb-3">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1f7a32" }} />
-          <span className="text-ink3 font-semibold uppercase" style={{ letterSpacing: ".06em" }}>Bull</span>
-          <span className="text-ink font-semibold tabular-nums">€{f.bullEUR.toLocaleString("nl-NL")}</span>
-          {bullROI !== null && <span className="text-ink3 tabular-nums">({bullROI >= 0 ? "+" : ""}{bullROI.toFixed(0)}%)</span>}
-        </span>
-      </div>
-      <p className="text-[12px] text-ink2 m-0" style={{ lineHeight: 1.5 }}>{f.rationale}</p>
+
+      <p className="text-[12px] text-ink2 m-0 mt-3" style={{ lineHeight: 1.5 }}>{f.rationale}</p>
     </div>
   );
 }
@@ -251,22 +257,23 @@ function StrategyPanel({ strategy, currentPriceEUR }: { strategy: AIAnalysis["st
   const buyDiff = strategy.buyBelowEUR !== null && currentPriceEUR ? currentPriceEUR - strategy.buyBelowEUR : null;
   return (
     <div className="bg-card rounded-md border p-5 md:p-6" style={{ borderColor: "#DCE7F4", boxShadow: "0 1px 2px rgba(11,42,74,.06), 0 2px 8px rgba(11,42,74,.05)" }}>
-      <h3 className="font-display text-[22px] text-ink m-0 mb-4" style={{ fontWeight: 400 }}>Strategie</h3>
+      <h3 className="font-display text-[22px] text-ink m-0 mb-1" style={{ fontWeight: 400 }}>Wanneer kopen of verkopen?</h3>
+      <p className="text-[12px] text-ink3 m-0 mb-4">Concrete prijzen om in gedachten te houden.</p>
       <div className="grid md:grid-cols-3 gap-3 md:gap-4">
         {/* Buy below */}
         <div className="rounded-md border-2 p-4" style={{ borderColor: "#3FA34D", background: "#e3f6e7" }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: "#3FA34D" }}>↓</span>
-            <span className="text-[11px] uppercase font-bold" style={{ letterSpacing: ".08em", color: "#1f7a32" }}>Koop onder</span>
+            <span className="text-[11px] uppercase font-bold" style={{ letterSpacing: ".08em", color: "#1f7a32" }}>Kopen als prijs onder</span>
           </div>
           <div className="font-display text-[32px] leading-none text-ink mb-1" style={{ fontWeight: 400 }}>
             {strategy.buyBelowEUR !== null ? `€${strategy.buyBelowEUR.toLocaleString("nl-NL")}` : "—"}
           </div>
           {buyDiff !== null && buyDiff > 0 && (
-            <div className="text-[11px] text-ink3 mb-2 font-semibold">€{buyDiff.toFixed(0)} onder huidige prijs</div>
+            <div className="text-[11px] text-ink2 mb-2 font-semibold">Nog €{buyDiff.toFixed(0)} te zakken</div>
           )}
           {buyDiff !== null && buyDiff <= 0 && (
-            <div className="text-[11px] font-bold mb-2" style={{ color: "#1f7a32" }}>✓ Huidige prijs onder doel</div>
+            <div className="text-[11px] font-bold mb-2" style={{ color: "#1f7a32" }}>✓ Nu een goede prijs</div>
           )}
         </div>
 
@@ -274,14 +281,14 @@ function StrategyPanel({ strategy, currentPriceEUR }: { strategy: AIAnalysis["st
         <div className="rounded-md border-2 p-4" style={{ borderColor: "#EE1515", background: "#fdebe9" }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: "#EE1515" }}>↑</span>
-            <span className="text-[11px] uppercase font-bold" style={{ letterSpacing: ".08em", color: "#b3261e" }}>Verkoop boven</span>
+            <span className="text-[11px] uppercase font-bold" style={{ letterSpacing: ".08em", color: "#b3261e" }}>Verkopen als prijs boven</span>
           </div>
           <div className="font-display text-[32px] leading-none text-ink mb-1" style={{ fontWeight: 400 }}>
             {strategy.sellAboveEUR !== null ? `€${strategy.sellAboveEUR.toLocaleString("nl-NL")}` : "—"}
           </div>
           {currentPriceEUR && strategy.sellAboveEUR && (
-            <div className="text-[11px] text-ink3 mb-2 font-semibold">
-              +{(((strategy.sellAboveEUR - currentPriceEUR) / currentPriceEUR) * 100).toFixed(0)}% vanaf nu
+            <div className="text-[11px] text-ink2 mb-2 font-semibold">
+              +€{(strategy.sellAboveEUR - currentPriceEUR).toFixed(0)} winst vanaf nu
             </div>
           )}
         </div>
@@ -290,9 +297,9 @@ function StrategyPanel({ strategy, currentPriceEUR }: { strategy: AIAnalysis["st
         <div className="rounded-md border-2 p-4" style={{ borderColor: "#2A75BB", background: "#E1ECFA" }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[12px]" style={{ background: "#2A75BB" }}>★</span>
-            <span className="text-[11px] uppercase font-bold" style={{ letterSpacing: ".08em", color: "#1B528C" }}>Beste vorm</span>
+            <span className="text-[11px] uppercase font-bold" style={{ letterSpacing: ".08em", color: "#1B528C" }}>Welke versie het beste</span>
           </div>
-          <div className="font-display text-[24px] leading-tight text-ink mb-1" style={{ fontWeight: 400 }}>
+          <div className="text-[14px] leading-snug text-ink mb-1 font-semibold">
             {strategy.bestVehicle}
           </div>
         </div>
@@ -307,16 +314,16 @@ function DriversGrid({ catalysts, risks }: { catalysts: AIAnalysis["catalysts"];
   return (
     <div className="grid md:grid-cols-2 gap-4">
       <DriverPanel
-        title="Catalysten"
-        subtitle="Wat de prijs kan opdrijven"
+        title="Redenen om te kopen"
+        subtitle="Waarom de prijs omhoog kan"
         items={catalysts}
         accent="#3FA34D"
         accentBg="#e3f6e7"
         icon="↑"
       />
       <DriverPanel
-        title="Risico's"
-        subtitle="Wat de prijs kan drukken"
+        title="Wat er mis kan gaan"
+        subtitle="Waarom de prijs kan zakken"
         items={risks}
         accent="#EE1515"
         accentBg="#fdebe9"
@@ -360,8 +367,8 @@ function ComparablesPanel({ comparables }: { comparables: AIAnalysis["comparable
   if (!comparables?.length) return null;
   return (
     <div className="bg-card rounded-md border p-5" style={{ borderColor: "#DCE7F4", boxShadow: "0 1px 2px rgba(11,42,74,.06), 0 2px 8px rgba(11,42,74,.05)" }}>
-      <h3 className="font-display text-[22px] text-ink m-0 mb-1" style={{ fontWeight: 400 }}>Vergelijkbare kaarten</h3>
-      <div className="text-[12px] text-ink3 mb-4">Kaarten met vergelijkbare investerings-dynamiek</div>
+      <h3 className="font-display text-[22px] text-ink m-0 mb-1" style={{ fontWeight: 400 }}>Kijk ook eens hier</h3>
+      <div className="text-[12px] text-ink3 mb-4">Andere kaarten die ongeveer hetzelfde doen qua prijs.</div>
       <div className="grid md:grid-cols-3 gap-3">
         {comparables.map((c, i) => (
           <div key={i} className="rounded-md border p-3" style={{ borderColor: "#DCE7F4", background: "#F4F8FE" }}>
