@@ -27,8 +27,8 @@ const verdictStyle: Record<string, string> = {
   "Sterk koop": "bg-pos text-white",
   "Koop": "bg-pos/12 text-pos",
   "Neutraal": "bg-elevated text-muted",
-  "Houden": "bg-warn/12 text-warn",
-  "Vermijden": "bg-neg/12 text-neg",
+  "Houden": "bg-pokeYellowSoft text-pokeYellowDark",
+  "Vermijden": "bg-pokeRedSoft text-pokeRed",
 };
 
 function daysSince(dateStr: string | null): number | null {
@@ -95,10 +95,10 @@ export default function CardPage({ params }: { params: { id: string } }) {
 
         <div className="space-y-5">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-accent mb-2">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-pokeBlue mb-2">
               {card.set.name} · {card.set.series} · {card.set.releaseDate}
             </div>
-            <h1 className="text-4xl font-semibold tracking-display text-ink">{card.name}</h1>
+            <h1 className="font-display text-4xl font-bold text-ink">{card.name}</h1>
             <div className="text-muted text-[14px] mt-2">
               #{card.number} · {card.rarity ?? "—"}{card.artist ? ` · ${card.artist}` : ""}
             </div>
@@ -133,11 +133,11 @@ export default function CardPage({ params }: { params: { id: string } }) {
                 id: card.id, name: card.name, setName: card.set.name,
                 image: card.images.small, notedPriceEUR: headline,
               })}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold transition ${
+              className={
                 inList
-                  ? "bg-elevated text-ink hover:bg-line"
-                  : "bg-ink text-white hover:bg-accent"
-              }`}
+                  ? "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-elevated text-ink hover:bg-line transition"
+                  : "btn-poke inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px]"
+              }
             >
               {inList ? "✓ In watchlist" : "+ Watchlist"}
             </button>

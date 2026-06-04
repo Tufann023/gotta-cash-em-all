@@ -43,7 +43,7 @@ export default function WatchlistPage() {
   return (
     <div className="fade-in space-y-8">
       <div>
-        <h1 className="text-4xl font-semibold tracking-display text-ink">Watchlist</h1>
+        <h1 className="font-display text-4xl font-bold text-ink">Watchlist</h1>
         <p className="text-muted text-[15px] mt-2">
           {items.length === 0
             ? "Voeg kaarten toe via de + Watchlist-knop op een kaartpagina."
@@ -59,7 +59,7 @@ export default function WatchlistPage() {
             Zoek een kaart en gebruik de "+ Watchlist" knop om hem hier op te slaan.
             Bij elk bezoek zie je actuele prijs + verschil sinds toevoeging.
           </div>
-          <a href="/" className="inline-block px-5 py-2.5 rounded-full bg-accent text-white font-semibold text-[13px] hover:bg-accentHover transition">
+          <a href="/" className="btn-poke inline-block px-5 py-2.5 rounded-full text-[13px]">
             Begin met zoeken
           </a>
         </div>

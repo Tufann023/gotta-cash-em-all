@@ -114,9 +114,9 @@ export default function HomePage() {
   return (
     <div className="space-y-10">
       <div className="text-center max-w-2xl mx-auto pt-6">
-        <h1 className="text-5xl md:text-6xl font-semibold text-ink tracking-display leading-[1.05]">
+        <h1 className="font-display text-5xl md:text-6xl font-bold text-ink leading-[1.05]">
           Elke Pokemon kaart.<br />
-          <span className="text-muted">Eén prijs.</span>
+          <span className="text-pokeBlue">Eén prijs.</span>
         </h1>
         <p className="mt-5 text-[17px] text-muted leading-relaxed">
           Zoek per kaartnaam, set of nummer. Direct marktprijs, PSA-schatting per grade, prijsverloop en investerings-analyse.
@@ -137,10 +137,7 @@ export default function HomePage() {
           />
           {loading && (
             <div className="absolute right-5 top-1/2 -translate-y-1/2">
-              <div className="relative w-5 h-5">
-                <div className="absolute inset-0 rounded-full border-2 border-elevated" />
-                <div className="absolute inset-0 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-              </div>
+              <span className="pokeball-spinner" aria-label="Aan het zoeken" role="status" />
             </div>
           )}
         </div>
@@ -286,7 +283,7 @@ export default function HomePage() {
                 <div className="flex justify-center pt-2">
                   <button
                     onClick={() => setShownCount(shownCount + PAGE_SIZE)}
-                    className="px-6 py-3 rounded-full bg-ink text-white text-[13px] font-semibold hover:bg-accent transition"
+                    className="btn-poke px-6 py-3 rounded-full text-[13px]"
                   >
                     Laad meer ({Math.min(PAGE_SIZE, filtered.length - shownCount)}) · {filtered.length - shownCount} nog te zien
                   </button>

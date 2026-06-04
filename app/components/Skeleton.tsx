@@ -27,10 +27,7 @@ export function ResultGridSkeleton({ count = 10 }: { count?: number }) {
 export function SearchingBar() {
   return (
     <div className="flex items-center gap-3 text-[13px] text-muted">
-      <div className="relative w-4 h-4">
-        <div className="absolute inset-0 rounded-full border-2 border-elevated" />
-        <div className="absolute inset-0 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-      </div>
+      <span className="pokeball-spinner" role="status" aria-label="Zoeken" />
       <span>Zoeken in pokemontcg.io database…</span>
     </div>
   );

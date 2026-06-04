@@ -1,8 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Apple-style system font stack — geen webfont nodig */
 html, body {
   background: #fbfbfd;
   color: #1d1d1f;
@@ -16,23 +17,80 @@ html, body {
 * { box-sizing: border-box; }
 
 a { color: inherit; text-decoration: none; }
-a:hover { color: #0071e3; }
+a:hover { color: #3D7DCA; }
 
-/* Subtiele animaties */
+/* Subtle Pokeball pattern background (very faint) */
+.poke-bg {
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(238, 21, 21, 0.015) 0%, transparent 60%),
+    radial-gradient(circle at 20% 80%, rgba(255, 203, 5, 0.02) 0%, transparent 50%);
+}
+
+/* Animations */
 .fade-in { animation: fadeIn .35s cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 
-/* Apple-style button defaults */
-button { font-family: inherit; }
+/* Pokeball loading spinner — rood/wit ring met blauwe center */
+.pokeball-spinner {
+  display: inline-block;
+  position: relative;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.pokeball-spinner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #EE1515 0% 50%, #ffffff 50% 100%);
+  border: 1.5px solid #1d1d1f;
+  animation: pokeSpin 1s linear infinite;
+}
+.pokeball-spinner::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 30%; height: 30%;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #1d1d1f;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+@keyframes pokeSpin {
+  to { transform: rotate(360deg); }
+}
 
-/* Custom scrollbar — subtieler */
+/* Pokemon-stijl CTA: geel met blauwe text en dikke shadow voor TCG-card feel */
+.btn-poke {
+  background: #FFCB05;
+  color: #2A5A98;
+  font-weight: 700;
+  border: 2px solid #2A5A98;
+  box-shadow: 0 3px 0 #2A5A98;
+  transition: all 0.12s ease;
+}
+.btn-poke:hover {
+  background: #FFD635;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #2A5A98;
+  color: #2A5A98;
+}
+.btn-poke:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #2A5A98;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 10px; border: 2px solid #fbfbfd; }
 ::-webkit-scrollbar-thumb:hover { background: #b8b8be; }
 
-/* Hairline borders Apple-stijl */
 .hairline { border-color: rgba(0,0,0,0.08); }
+
+/* Font helpers */
+.font-display { font-family: "Fredoka", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
