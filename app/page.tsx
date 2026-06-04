@@ -42,6 +42,7 @@ export default function HomePage() {
   const [selectedBucket, setSelectedBucket] = useState<number | null>(null);
   const [sort, setSort] = useState<SortKey>("relevance");
   const [shownCount, setShownCount] = useState(PAGE_SIZE);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -172,56 +173,84 @@ export default function HomePage() {
               {activeFilters > 0 && <span> · {activeFilters} filter{activeFilters > 1 ? "s" : ""} actief</span>}
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-[12px] text-muted">Sorteer:</label>
+              <button
+                onClick={() => setFiltersOpen((v) => !v)}
+                aria-expanded={filtersOpen}
+                aria-controls="filter-panel"
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold transition border ${
+                  filtersOpen
+                    ? "bg-accent text-white border-accent"
+                    : activeFilters > 0
+                      ? "bg-accentSoft text-accent border-accent/30"
+                      : "bg-surface text-ink border-line hover:border-accent hover:text-accent"
+                }`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 6h18M7 12h10M10 18h4"/>
+                </svg>
+                <span>Filter</span>
+                {activeFilters > 0 && (
+                  <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold ${filtersOpen ? "bg-white/25 text-white" : "bg-accent text-white"}`}>
+                    {activeFilters}
+                  </span>
+                )}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`transition-transform ${filtersOpen ? "rotate-180" : ""}`}>
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </button>
+              <label htmlFor="sort-select" className="sr-only">Sorteer resultaten</label>
               <select
+                id="sort-select"
                 value={sort} onChange={(e) => setSort(e.target.value as SortKey)}
-                className="bg-surface border hairline rounded-lg px-3 py-1.5 text-[13px] outline-none focus:border-accent transition"
+                className="bg-surface border hairline rounded-full px-3.5 py-2 text-[13px] font-medium outline-none focus:border-accent transition cursor-pointer"
               >
                 {SORT_OPTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Filter panel */}
-          <div className="bg-surface rounded-2xl border hairline p-5 space-y-4">
-            {availableSets.length > 1 && (
-              <FilterGroup label={`Set (${availableSets.length})`}>
-                {availableSets.slice(0, 12).map(([s, count]) => (
+          {/* Filter panel (collapsible) */}
+          {filtersOpen && (
+            <div id="filter-panel" className="fade-in bg-surface rounded-2xl border hairline p-5 space-y-4" role="region" aria-label="Filter opties">
+              {availableSets.length > 1 && (
+                <FilterGroup label={`Set (${availableSets.length})`}>
+                  {availableSets.slice(0, 12).map(([s, count]) => (
+                    <Chip
+                      key={s} active={selectedSets.has(s)} onClick={() => toggleSet(s)}
+                      label={s} hint={`${count}`}
+                    />
+                  ))}
+                </FilterGroup>
+              )}
+              {availableRarities.length > 1 && (
+                <FilterGroup label={`Rariteit (${availableRarities.length})`}>
+                  {availableRarities.slice(0, 10).map(([r, count]) => (
+                    <Chip
+                      key={r} active={selectedRarities.has(r)} onClick={() => toggleRarity(r)}
+                      label={r} hint={`${count}`}
+                    />
+                  ))}
+                </FilterGroup>
+              )}
+              <FilterGroup label="Prijsklasse">
+                {PRICE_BUCKETS.map((b, i) => (
                   <Chip
-                    key={s} active={selectedSets.has(s)} onClick={() => toggleSet(s)}
-                    label={s} hint={`${count}`}
+                    key={i} active={selectedBucket === i}
+                    onClick={() => { setSelectedBucket(selectedBucket === i ? null : i); setShownCount(PAGE_SIZE); }}
+                    label={b.label}
                   />
                 ))}
               </FilterGroup>
-            )}
-            {availableRarities.length > 1 && (
-              <FilterGroup label={`Rariteit (${availableRarities.length})`}>
-                {availableRarities.slice(0, 10).map(([r, count]) => (
-                  <Chip
-                    key={r} active={selectedRarities.has(r)} onClick={() => toggleRarity(r)}
-                    label={r} hint={`${count}`}
-                  />
-                ))}
-              </FilterGroup>
-            )}
-            <FilterGroup label="Prijsklasse">
-              {PRICE_BUCKETS.map((b, i) => (
-                <Chip
-                  key={i} active={selectedBucket === i}
-                  onClick={() => { setSelectedBucket(selectedBucket === i ? null : i); setShownCount(PAGE_SIZE); }}
-                  label={b.label}
-                />
-              ))}
-            </FilterGroup>
-            {activeFilters > 0 && (
-              <button
-                onClick={() => { setSelectedSets(new Set()); setSelectedRarities(new Set()); setSelectedBucket(null); }}
-                className="text-[12px] text-accent hover:underline"
-              >
-                ← Wis alle filters
-              </button>
-            )}
-          </div>
+              {activeFilters > 0 && (
+                <button
+                  onClick={() => { setSelectedSets(new Set()); setSelectedRarities(new Set()); setSelectedBucket(null); }}
+                  className="text-[12px] text-accent hover:underline font-medium"
+                >
+                  Wis alle filters
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Grid */}
           {filtered.length > 0 ? (
