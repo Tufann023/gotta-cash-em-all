@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apple-style system font stack — geen webfont nodig */
+html, body {
+  background: #fbfbfd;
+  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+               "Helvetica Neue", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
+}
+
+* { box-sizing: border-box; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: #0071e3; }
+
+/* Subtiele animaties */
+.fade-in { animation: fadeIn .35s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Apple-style button defaults */
+button { font-family: inherit; }
+
+/* Custom scrollbar — subtieler */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 10px; border: 2px solid #fbfbfd; }
+::-webkit-scrollbar-thumb:hover { background: #b8b8be; }
+
+/* Hairline borders Apple-stijl */
+.hairline { border-color: rgba(0,0,0,0.08); }
