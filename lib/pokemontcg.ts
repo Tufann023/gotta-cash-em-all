@@ -25,7 +25,7 @@ export type Card = {
     updatedAt: string;
     prices?: Record<
       string,
-      { low: number; mid: number; high: number; market: number; directLow?: number }
+      { low?: number; mid?: number; high?: number; market?: number; directLow?: number }
     >;
   };
   cardmarket?: {
@@ -142,72 +142,150 @@ export async function getCard(id: string): Promise<Card | null> {
   return json.data as Card;
 }
 
-// Helper: get the most-relevant raw market price in EUR.
-// Voorkeur: lowPriceExPlus (laagste vraagprijs voor NM+/EX+ conditie) — meest
-// actiebaar; valt terug op trendPrice (Cardmarket's fair value).
+// USD → EUR conversie (Q2 2026 koers, geüpdatet bij grote shifts)
+const USD_TO_EUR = 0.92;
+const STALE_DAYS = 60; // Cardmarket wordt als stale beschouwd boven deze drempel
+
+function parseDate(s: string | null | undefined): Date | null {
+  if (!s) return null;
+  const d = new Date(s.replace(/\//g, "-"));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function daysOld(d: Date | null): number {
+  if (!d) return Infinity;
+  return (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
+}
+
+type TcgVariant = { low?: number; mid?: number; high?: number; market?: number; directLow?: number };
+function tcgVariantPrice(card: Card): TcgVariant | null {
+  const tcg = card.tcgplayer?.prices;
+  if (!tcg) return null;
+  return (tcg.holofoil ?? tcg.reverseHolofoil ?? tcg.normal ?? null) as TcgVariant | null;
+}
+
+// Helper: meest actuele markprijs in EUR.
+// Logica:
+//   1) Als TCGPlayer market price beschikbaar = neem die (always fresh).
+//   2) Anders Cardmarket trendPrice als die <60 dagen oud is.
+//   3) Anders niets.
+// TCGPlayer is consistent dagelijks geüpdate; Cardmarket-snapshots in
+// pokemontcg.io zijn vaak maanden oud voor populaire/stabiele kaarten.
 export function rawMarketEUR(card: Card): number | null {
+  const tcgVar = tcgVariantPrice(card);
+  if (tcgVar?.market && tcgVar.market > 0) {
+    return +(tcgVar.market * USD_TO_EUR).toFixed(2);
+  }
   const cm = card.cardmarket?.prices;
+  const cmDate = parseDate(card.cardmarket?.updatedAt);
+  const fresh = daysOld(cmDate) <= STALE_DAYS;
+  if (cm && fresh) {
+    const candidate = cm.trendPrice || cm.averageSellPrice || cm.avg30;
+    if (candidate && candidate > 0) return candidate;
+  }
+  // Last resort: stale Cardmarket
   if (cm) {
     const candidate = cm.trendPrice || cm.averageSellPrice || cm.avg30;
-    return candidate && candidate > 0 ? candidate : null;
-  }
-  const tcg = card.tcgplayer?.prices;
-  if (tcg) {
-    const variant = tcg.holofoil ?? tcg.reverseHolofoil ?? tcg.normal;
-    if (variant?.market) return variant.market * 0.92;
+    if (candidate && candidate > 0) return candidate;
   }
   return null;
 }
 
 export type PriceDetail = {
-  lowPriceExPlus: number | null;  // vanaf-prijs NM+
-  lowPrice: number | null;        // laagste asking (incl. beschadigd)
-  trendPrice: number | null;      // Cardmarket fair value
-  averageSellPrice: number | null;
-  avg1: number | null;
-  avg7: number | null;
-  avg30: number | null;
-  updatedAt: string | null;
-  source: "cardmarket" | "tcgplayer" | "none";
+  // Headline
+  primaryEUR: number | null;
+  primarySource: "tcgplayer" | "cardmarket" | "none";
+  primaryUpdatedAt: string | null;
+  primaryStale: boolean;
+  // Cardmarket data points (kunnen stale zijn)
+  cm: {
+    lowPriceExPlus: number | null;
+    lowPrice: number | null;
+    trendPrice: number | null;
+    averageSellPrice: number | null;
+    avg30: number | null;
+    avg7: number | null;
+    avg1: number | null;
+    updatedAt: string | null;
+    daysOld: number | null;
+    stale: boolean;
+  };
+  // TCGPlayer data (in EUR omgezet)
+  tcg: {
+    low: number | null;
+    mid: number | null;
+    high: number | null;
+    market: number | null;
+    directLow: number | null;
+    updatedAt: string | null;
+    daysOld: number | null;
+    variantName: string | null;
+    rateUsedUsdEur: number;
+  };
 };
 
 export function priceDetail(card: Card): PriceDetail {
-  const cm = card.cardmarket;
-  const p = cm?.prices;
-  if (p && (p.trendPrice || p.averageSellPrice || p.lowPrice)) {
-    return {
-      lowPriceExPlus: (p as any).lowPriceExPlus || null,
-      lowPrice: p.lowPrice || null,
-      trendPrice: p.trendPrice || null,
-      averageSellPrice: p.averageSellPrice || null,
-      avg1: p.avg1 || null,
-      avg7: p.avg7 || null,
-      avg30: p.avg30 || null,
-      updatedAt: cm?.updatedAt || null,
-      source: "cardmarket",
-    };
+  const cmDate = parseDate(card.cardmarket?.updatedAt);
+  const cmDaysOld = cmDate ? Math.floor(daysOld(cmDate)) : null;
+  const cmStale = cmDaysOld !== null ? cmDaysOld > STALE_DAYS : true;
+  const p = card.cardmarket?.prices;
+
+  const tcgVar = tcgVariantPrice(card);
+  const tcgDate = parseDate(card.tcgplayer?.updatedAt);
+  const tcgDaysOld = tcgDate ? Math.floor(daysOld(tcgDate)) : null;
+  const variantName = card.tcgplayer?.prices
+    ? Object.keys(card.tcgplayer.prices)[0] ?? null
+    : null;
+
+  const usd = (v: number | undefined): number | null =>
+    v && v > 0 ? +(v * USD_TO_EUR).toFixed(2) : null;
+
+  // Bepaal primary
+  let primaryEUR: number | null = null;
+  let primarySource: PriceDetail["primarySource"] = "none";
+  let primaryUpdatedAt: string | null = null;
+  let primaryStale = false;
+
+  if (tcgVar?.market && tcgVar.market > 0) {
+    primaryEUR = +(tcgVar.market * USD_TO_EUR).toFixed(2);
+    primarySource = "tcgplayer";
+    primaryUpdatedAt = card.tcgplayer?.updatedAt ?? null;
+    primaryStale = (tcgDaysOld ?? 0) > STALE_DAYS;
+  } else if (p && (p.trendPrice || p.averageSellPrice || p.avg30)) {
+    primaryEUR = p.trendPrice || p.averageSellPrice || p.avg30 || null;
+    primarySource = "cardmarket";
+    primaryUpdatedAt = card.cardmarket?.updatedAt ?? null;
+    primaryStale = cmStale;
   }
-  const tcg = card.tcgplayer;
-  const tp = tcg?.prices;
-  if (tp) {
-    const v = tp.holofoil ?? tp.reverseHolofoil ?? tp.normal;
-    if (v) {
-      const rate = 0.92;
-      return {
-        lowPriceExPlus: v.low ? +(v.low * rate).toFixed(2) : null,
-        lowPrice: v.low ? +(v.low * rate).toFixed(2) : null,
-        trendPrice: v.market ? +(v.market * rate).toFixed(2) : null,
-        averageSellPrice: v.mid ? +(v.mid * rate).toFixed(2) : null,
-        avg1: null, avg7: null, avg30: null,
-        updatedAt: tcg?.updatedAt || null,
-        source: "tcgplayer",
-      };
-    }
-  }
+
   return {
-    lowPriceExPlus: null, lowPrice: null, trendPrice: null,
-    averageSellPrice: null, avg1: null, avg7: null, avg30: null,
-    updatedAt: null, source: "none",
+    primaryEUR,
+    primarySource,
+    primaryUpdatedAt,
+    primaryStale,
+    cm: {
+      lowPriceExPlus: p?.lowPriceExPlus || null,
+      lowPrice: p?.lowPrice || null,
+      trendPrice: p?.trendPrice || null,
+      averageSellPrice: p?.averageSellPrice || null,
+      avg30: p?.avg30 || null,
+      avg7: p?.avg7 || null,
+      avg1: p?.avg1 || null,
+      updatedAt: card.cardmarket?.updatedAt ?? null,
+      daysOld: cmDaysOld,
+      stale: cmStale,
+    },
+    tcg: {
+      low: usd(tcgVar?.low),
+      mid: usd(tcgVar?.mid),
+      high: usd(tcgVar?.high),
+      market: usd(tcgVar?.market),
+      directLow: usd((tcgVar as any)?.directLow),
+      updatedAt: card.tcgplayer?.updatedAt ?? null,
+      daysOld: tcgDaysOld,
+      variantName,
+      rateUsedUsdEur: USD_TO_EUR,
+    },
   };
 }
 

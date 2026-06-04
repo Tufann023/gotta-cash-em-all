@@ -9,9 +9,21 @@ type Outlook = { horizon: string; base: string; bear: string; bull: string };
 type Analysis = { verdict: string; score: number; signals: Sig[]; outlook: Outlook[]; summary: string };
 
 type PriceDetail = {
-  lowPriceExPlus: number | null; lowPrice: number | null; trendPrice: number | null;
-  averageSellPrice: number | null; avg1: number | null; avg7: number | null;
-  avg30: number | null; updatedAt: string | null; source: string;
+  primaryEUR: number | null;
+  primarySource: "tcgplayer" | "cardmarket" | "none";
+  primaryUpdatedAt: string | null;
+  primaryStale: boolean;
+  cm: {
+    lowPriceExPlus: number | null; lowPrice: number | null; trendPrice: number | null;
+    averageSellPrice: number | null; avg30: number | null; avg7: number | null; avg1: number | null;
+    updatedAt: string | null; daysOld: number | null; stale: boolean;
+  };
+  tcg: {
+    low: number | null; mid: number | null; high: number | null;
+    market: number | null; directLow: number | null;
+    updatedAt: string | null; daysOld: number | null; variantName: string | null;
+    rateUsedUsdEur: number;
+  };
 };
 
 type Payload = {
@@ -31,11 +43,17 @@ const verdictStyle: Record<string, string> = {
   "Vermijden": "bg-pokeRedSoft text-pokeRed",
 };
 
-function daysSince(dateStr: string | null): number | null {
-  if (!dateStr) return null;
-  const d = new Date(dateStr.replace(/\//g, "-"));
-  if (isNaN(d.getTime())) return null;
-  return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+function sourceLabel(s: string): string {
+  if (s === "tcgplayer") return "TCGPlayer (US)";
+  if (s === "cardmarket") return "Cardmarket (EU)";
+  return "—";
+}
+
+function freshLabel(days: number | null): { text: string; tone: "fresh" | "ok" | "stale" } {
+  if (days === null) return { text: "Onbekend", tone: "stale" };
+  if (days <= 7) return { text: `${days} dag${days === 1 ? "" : "en"} oud`, tone: "fresh" };
+  if (days <= 60) return { text: `${days} dagen oud`, tone: "ok" };
+  return { text: `${days} dagen oud`, tone: "stale" };
 }
 
 export default function CardPage({ params }: { params: { id: string } }) {
@@ -76,9 +94,10 @@ export default function CardPage({ params }: { params: { id: string } }) {
 
   const { card, raw, prices, history, slabs, analysis } = data;
   const inList = hydrated && has(card.id);
-  const stale = daysSince(prices.updatedAt);
-  const headline = prices.lowPriceExPlus || prices.trendPrice || raw;
+  const headline = prices.primaryEUR ?? raw;
+  const headlineSource = prices.primarySource;
   const cardmarketUrl = card.cardmarket?.url;
+  const tcgplayerUrl = card.tcgplayer?.url;
 
   return (
     <div className="fade-in space-y-10">
@@ -109,18 +128,11 @@ export default function CardPage({ params }: { params: { id: string } }) {
               {headline ? `€${headline.toFixed(2)}` : "—"}
             </div>
             <div className="text-[13px] text-muted">
-              {prices.lowPriceExPlus ? "vanaf NM+ · Cardmarket" : "raw marktprijs · Cardmarket"}
+              raw marktprijs · {sourceLabel(headlineSource)}
+              {prices.primaryUpdatedAt && <> · bijgewerkt {prices.primaryUpdatedAt}</>}
+              {prices.primaryStale && <span className="text-pokeRed"> · stale</span>}
             </div>
           </div>
-
-          {stale !== null && stale > 90 && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warn/10 text-warn text-[12px]">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-              Data is {stale} dagen oud — Cardmarket-snapshot via pokemontcg.io. {cardmarketUrl && (
-                <a href={cardmarketUrl} target="_blank" rel="noopener" className="underline hover:no-underline">Check live</a>
-              )}
-            </div>
-          )}
 
           <div className="flex flex-wrap items-center gap-3">
             <span className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold ${verdictStyle[analysis.verdict] ?? "bg-elevated text-muted"}`}>
@@ -152,7 +164,7 @@ export default function CardPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <PricePanel prices={prices} />
+      <PricePanel prices={prices} cardmarketUrl={cardmarketUrl} tcgplayerUrl={tcgplayerUrl} />
 
       <div className="grid md:grid-cols-2 gap-5">
         <PriceChart data={history} />
@@ -191,35 +203,94 @@ export default function CardPage({ params }: { params: { id: string } }) {
   );
 }
 
-function PricePanel({ prices }: { prices: PriceDetail }) {
-  const points: { label: string; value: number | null; hint?: string }[] = [
-    { label: "Vanaf (NM+)",        value: prices.lowPriceExPlus, hint: "Laagste vraagprijs near-mint of beter" },
-    { label: "Trend",              value: prices.trendPrice,     hint: "Cardmarket's algoritmische fair value" },
-    { label: "Gem. verkoop",       value: prices.averageSellPrice, hint: "Gemiddelde van recente verkopen" },
-    { label: "30 dgn gemiddeld",   value: prices.avg30 },
-    { label: "7 dgn gemiddeld",    value: prices.avg7 },
-    { label: "Allerlaagste",       value: prices.lowPrice,       hint: "Incl. beschadigde / lagere conditie" },
-  ];
+function PricePanel({ prices, cardmarketUrl, tcgplayerUrl }: {
+  prices: PriceDetail;
+  cardmarketUrl?: string;
+  tcgplayerUrl?: string;
+}) {
+  return (
+    <div className="grid lg:grid-cols-2 gap-4">
+      <SourcePanel
+        title="TCGPlayer (US, USD → EUR)"
+        subtitle={`Koers $1 = €${prices.tcg.rateUsedUsdEur.toFixed(2)} · variant: ${prices.tcg.variantName ?? "—"}`}
+        url={tcgplayerUrl}
+        updatedAt={prices.tcg.updatedAt}
+        daysOld={prices.tcg.daysOld}
+        points={[
+          { label: "Low",          value: prices.tcg.low,       hint: "Laagste asking price" },
+          { label: "Market",       value: prices.tcg.market,    hint: "TCGPlayer's market price" },
+          { label: "Mid",          value: prices.tcg.mid,       hint: "Gemiddeld asking" },
+          { label: "High",         value: prices.tcg.high,      hint: "Hoogste asking" },
+          { label: "Direct Low",   value: prices.tcg.directLow, hint: "Goedkoopste TCGdirect (US shipping)" },
+        ]}
+      />
+      <SourcePanel
+        title="Cardmarket (EU, EUR)"
+        subtitle="Snapshot via pokemontcg.io"
+        url={cardmarketUrl}
+        updatedAt={prices.cm.updatedAt}
+        daysOld={prices.cm.daysOld}
+        points={[
+          { label: "Vanaf NM+",   value: prices.cm.lowPriceExPlus, hint: "Laagste vraagprijs near-mint of beter" },
+          { label: "Trend",       value: prices.cm.trendPrice,     hint: "Cardmarket's fair value" },
+          { label: "Gem. sell",   value: prices.cm.averageSellPrice, hint: "Gemiddelde recente verkopen" },
+          { label: "30d gem.",    value: prices.cm.avg30 },
+          { label: "7d gem.",     value: prices.cm.avg7 },
+          { label: "Allerlaagste", value: prices.cm.lowPrice,      hint: "Incl. beschadigd" },
+        ]}
+      />
+    </div>
+  );
+}
+
+function SourcePanel({ title, subtitle, url, updatedAt, daysOld, points }: {
+  title: string;
+  subtitle: string;
+  url?: string;
+  updatedAt: string | null;
+  daysOld: number | null;
+  points: { label: string; value: number | null; hint?: string }[];
+}) {
   const active = points.filter((p) => p.value !== null);
-  if (active.length === 0) return null;
+  const fl = freshLabel(daysOld);
+  const toneColor =
+    fl.tone === "fresh" ? "bg-pos/15 text-pos" :
+    fl.tone === "ok"    ? "bg-pokeBlueSoft text-pokeBlue" :
+                          "bg-pokeRedSoft text-pokeRed";
+
   return (
     <div className="bg-surface rounded-2xl border hairline p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-          Alle prijsindicatoren · Cardmarket
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <div>
+          <div className="font-semibold text-ink text-[14px]">{title}</div>
+          <div className="text-[11px] text-muted mt-0.5">{subtitle}</div>
         </div>
-        {prices.updatedAt && (
-          <div className="text-[11px] text-subtle">Snapshot {prices.updatedAt}</div>
+        {url && (
+          <a href={url} target="_blank" rel="noopener"
+             className="text-[11px] text-pokeBlue hover:underline whitespace-nowrap">
+            Open ↗
+          </a>
         )}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {active.map((p) => (
-          <div key={p.label} className="p-3 rounded-xl bg-elevated">
-            <div className="text-[10px] uppercase tracking-wider text-muted mb-1.5" title={p.hint}>{p.label}</div>
-            <div className="text-[18px] font-semibold tabular-nums text-ink">€{p.value!.toFixed(2)}</div>
-          </div>
-        ))}
+      <div className="flex items-center gap-2 mb-4 mt-2">
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${toneColor}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${fl.tone === "fresh" ? "bg-pos" : fl.tone === "ok" ? "bg-pokeBlue" : "bg-pokeRed"}`} />
+          {fl.text}
+        </span>
+        {updatedAt && <span className="text-[10px] text-subtle">{updatedAt}</span>}
       </div>
+      {active.length === 0 ? (
+        <div className="text-[12px] text-subtle italic">Geen data beschikbaar uit deze bron.</div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {active.map((p) => (
+            <div key={p.label} className="p-2.5 rounded-lg bg-elevated">
+              <div className="text-[10px] uppercase tracking-wider text-muted mb-1" title={p.hint}>{p.label}</div>
+              <div className="text-[15px] font-semibold tabular-nums text-ink">€{p.value!.toFixed(2)}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
