@@ -150,7 +150,7 @@ const STALE_DAYS = 30; // Cardmarket wordt boven deze drempel als stale beschouw
 export async function getUsdToEur(): Promise<number> {
   try {
     const res = await fetch(
-      "https://api.frankfurter.app/latest?from=USD&to=EUR",
+      "https://api.frankfurter.dev/v1/latest?from=USD&to=EUR",
       { next: { revalidate: 86400 } }, // 24 uur cache (Next.js edge)
     );
     if (!res.ok) return FX_FALLBACK;
