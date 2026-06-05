@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/supabase/AuthProvider";
 
 export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -65,6 +65,14 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
             <div className="text-[14px] text-ink font-semibold truncate">{user.email}</div>
           </div>
         </div>
+        {isAdmin && (
+          <a
+            href="/admin"
+            className="block px-4 py-3 rounded-md text-[14px] font-semibold text-pokeBlue hover:bg-bg2 transition"
+          >
+            🛠 Admin
+          </a>
+        )}
         <form action="/auth/signout" method="post">
           <button
             type="submit"
@@ -106,10 +114,20 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
             <div className="text-[14px] text-ink font-semibold truncate">{user.email}</div>
           </div>
           <div className="border-t" style={{ borderColor: "#DCE7F4" }} />
+          {isAdmin && (
+            <a
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-[14px] font-semibold text-pokeBlue hover:bg-bg2 transition"
+            >
+              🛠 Admin
+            </a>
+          )}
           <form action="/auth/signout" method="post">
             <button
               type="submit"
-              className="w-full text-left px-4 py-2.5 text-[14px] text-ink2 hover:bg-bg2 hover:text-pokeRed transition"
+              className={`w-full text-left px-4 py-2.5 text-[14px] text-ink2 hover:bg-bg2 hover:text-pokeRed transition ${isAdmin ? "border-t" : ""}`}
+              style={isAdmin ? { borderColor: "#DCE7F4" } : undefined}
             >
               Uitloggen
             </button>
