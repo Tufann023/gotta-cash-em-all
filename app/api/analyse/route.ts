@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { getCard, rawMarketEUR, priceHistoryEUR, priceDetail } from "@/lib/pokemontcg";
+import { getCard, rawMarketEUR, priceHistoryEUR, priceDetail, getUsdToEur } from "@/lib/pokemontcg";
 import { estimateSlabs } from "@/lib/psa";
 import { analyseCard } from "@/lib/analysis";
 
@@ -44,14 +44,14 @@ export async function POST(req: Request) {
     );
   }
 
-  const card = await getCard(id);
+  const [card, usdToEur] = await Promise.all([getCard(id), getUsdToEur()]);
   if (!card) return NextResponse.json({ error: "card not found" }, { status: 404 });
 
-  const raw = rawMarketEUR(card);
+  const raw = rawMarketEUR(card, usdToEur);
   const history = priceHistoryEUR(card);
   const slabs = estimateSlabs(card, raw);
   const rules = analyseCard(card);
-  const prices = priceDetail(card);
+  const prices = priceDetail(card, usdToEur);
 
   const client = new Anthropic({ apiKey });
 

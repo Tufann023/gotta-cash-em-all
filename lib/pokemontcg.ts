@@ -142,9 +142,25 @@ export async function getCard(id: string): Promise<Card | null> {
   return json.data as Card;
 }
 
-// USD → EUR conversie (Q2 2026 koers, geüpdatet bij grote shifts)
-const USD_TO_EUR = 0.92;
-const STALE_DAYS = 60; // Cardmarket wordt als stale beschouwd boven deze drempel
+// USD → EUR conversie: live koers via Frankfurter (gratis, geen key, 24u cache).
+// Fallback bij storing = 0.92 (Q2 2026 gemiddelde).
+const FX_FALLBACK = 0.92;
+const STALE_DAYS = 30; // Cardmarket wordt boven deze drempel als stale beschouwd
+
+export async function getUsdToEur(): Promise<number> {
+  try {
+    const res = await fetch(
+      "https://api.frankfurter.app/latest?from=USD&to=EUR",
+      { next: { revalidate: 86400 } }, // 24 uur cache (Next.js edge)
+    );
+    if (!res.ok) return FX_FALLBACK;
+    const json = await res.json();
+    const rate = json?.rates?.EUR;
+    return typeof rate === "number" && rate > 0 ? rate : FX_FALLBACK;
+  } catch {
+    return FX_FALLBACK;
+  }
+}
 
 function parseDate(s: string | null | undefined): Date | null {
   if (!s) return null;
@@ -164,18 +180,14 @@ function tcgVariantPrice(card: Card): TcgVariant | null {
   return (tcg.holofoil ?? tcg.reverseHolofoil ?? tcg.normal ?? null) as TcgVariant | null;
 }
 
-// Helper: meest actuele markprijs in EUR.
-// Logica:
-//   1) Als TCGPlayer market price beschikbaar = neem die (always fresh).
-//   2) Anders Cardmarket trendPrice als die <60 dagen oud is.
-//   3) Anders niets.
-// TCGPlayer is consistent dagelijks geüpdate; Cardmarket-snapshots in
-// pokemontcg.io zijn vaak maanden oud voor populaire/stabiele kaarten.
-export function rawMarketEUR(card: Card): number | null {
-  const tcgVar = tcgVariantPrice(card);
-  if (tcgVar?.market && tcgVar.market > 0) {
-    return +(tcgVar.market * USD_TO_EUR).toFixed(2);
-  }
+// Helper: meest actuele EU-markprijs in EUR.
+// Bron-prioriteit (voor EU-kopers het meest relevant):
+//   1) Cardmarket trendPrice als data <30 dagen vers is (EU-markt = direct relevant).
+//   2) TCGPlayer market price × live USD/EUR koers (alleen US-prijs, maar wel up-to-date).
+//   3) Stale Cardmarket als last resort.
+// pokemontcg.io's Cardmarket-snapshot is voor stabiele kaarten vaak maanden oud,
+// daarom valt 'ie voor die kaarten terug op TCGPlayer (dat dagelijks ververst wordt).
+export function rawMarketEUR(card: Card, usdToEur: number = FX_FALLBACK): number | null {
   const cm = card.cardmarket?.prices;
   const cmDate = parseDate(card.cardmarket?.updatedAt);
   const fresh = daysOld(cmDate) <= STALE_DAYS;
@@ -183,7 +195,10 @@ export function rawMarketEUR(card: Card): number | null {
     const candidate = cm.trendPrice || cm.averageSellPrice || cm.avg30;
     if (candidate && candidate > 0) return candidate;
   }
-  // Last resort: stale Cardmarket
+  const tcgVar = tcgVariantPrice(card);
+  if (tcgVar?.market && tcgVar.market > 0) {
+    return +(tcgVar.market * usdToEur).toFixed(2);
+  }
   if (cm) {
     const candidate = cm.trendPrice || cm.averageSellPrice || cm.avg30;
     if (candidate && candidate > 0) return candidate;
@@ -224,7 +239,7 @@ export type PriceDetail = {
   };
 };
 
-export function priceDetail(card: Card): PriceDetail {
+export function priceDetail(card: Card, usdToEur: number = FX_FALLBACK): PriceDetail {
   const cmDate = parseDate(card.cardmarket?.updatedAt);
   const cmDaysOld = cmDate ? Math.floor(daysOld(cmDate)) : null;
   const cmStale = cmDaysOld !== null ? cmDaysOld > STALE_DAYS : true;
@@ -238,24 +253,31 @@ export function priceDetail(card: Card): PriceDetail {
     : null;
 
   const usd = (v: number | undefined): number | null =>
-    v && v > 0 ? +(v * USD_TO_EUR).toFixed(2) : null;
+    v && v > 0 ? +(v * usdToEur).toFixed(2) : null;
 
-  // Bepaal primary
+  // Bepaal primary — Cardmarket-eerst als die vers is (EU-markt)
   let primaryEUR: number | null = null;
   let primarySource: PriceDetail["primarySource"] = "none";
   let primaryUpdatedAt: string | null = null;
   let primaryStale = false;
 
-  if (tcgVar?.market && tcgVar.market > 0) {
-    primaryEUR = +(tcgVar.market * USD_TO_EUR).toFixed(2);
+  const cmCandidate = p?.trendPrice || p?.averageSellPrice || p?.avg30 || null;
+  if (cmCandidate && !cmStale) {
+    primaryEUR = cmCandidate;
+    primarySource = "cardmarket";
+    primaryUpdatedAt = card.cardmarket?.updatedAt ?? null;
+    primaryStale = false;
+  } else if (tcgVar?.market && tcgVar.market > 0) {
+    primaryEUR = +(tcgVar.market * usdToEur).toFixed(2);
     primarySource = "tcgplayer";
     primaryUpdatedAt = card.tcgplayer?.updatedAt ?? null;
     primaryStale = (tcgDaysOld ?? 0) > STALE_DAYS;
-  } else if (p && (p.trendPrice || p.averageSellPrice || p.avg30)) {
-    primaryEUR = p.trendPrice || p.averageSellPrice || p.avg30 || null;
+  } else if (cmCandidate) {
+    // Last resort: stale Cardmarket
+    primaryEUR = cmCandidate;
     primarySource = "cardmarket";
     primaryUpdatedAt = card.cardmarket?.updatedAt ?? null;
-    primaryStale = cmStale;
+    primaryStale = true;
   }
 
   return {
@@ -284,7 +306,7 @@ export function priceDetail(card: Card): PriceDetail {
       updatedAt: card.tcgplayer?.updatedAt ?? null,
       daysOld: tcgDaysOld,
       variantName,
-      rateUsedUsdEur: USD_TO_EUR,
+      rateUsedUsdEur: usdToEur,
     },
   };
 }

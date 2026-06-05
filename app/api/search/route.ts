@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchCards, rawMarketEUR } from "@/lib/pokemontcg";
+import { searchCards, rawMarketEUR, getUsdToEur } from "@/lib/pokemontcg";
 
 export const runtime = "nodejs";
 export const revalidate = 600;
@@ -10,7 +10,10 @@ export async function GET(req: Request) {
   if (!q.trim()) return NextResponse.json({ data: [], total: 0 });
 
   try {
-    const cards = await searchCards(q);
+    const [cards, usdToEur] = await Promise.all([
+      searchCards(q),
+      getUsdToEur(),
+    ]);
     const slim = cards.map((c) => ({
       id: c.id,
       name: c.name,
@@ -20,7 +23,7 @@ export async function GET(req: Request) {
       setId: c.set.id,
       setReleaseDate: c.set.releaseDate,
       image: c.images.small,
-      priceEUR: rawMarketEUR(c),
+      priceEUR: rawMarketEUR(c, usdToEur),
       year: parseInt(c.set.releaseDate?.slice(0, 4) || "0", 10),
     }));
     return NextResponse.json({ data: slim, total: slim.length });

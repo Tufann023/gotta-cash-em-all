@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { getCard, rawMarketEUR, priceHistoryEUR, priceDetail } from "@/lib/pokemontcg";
+import {
+  getCard, rawMarketEUR, priceHistoryEUR, priceDetail, getUsdToEur,
+} from "@/lib/pokemontcg";
 import { estimateSlabs } from "@/lib/psa";
 import { analyseCard } from "@/lib/analysis";
 
@@ -8,13 +10,16 @@ export const revalidate = 300;
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
-    const card = await getCard(params.id);
+    const [card, usdToEur] = await Promise.all([
+      getCard(params.id),
+      getUsdToEur(),
+    ]);
     if (!card) return NextResponse.json({ error: "not found" }, { status: 404 });
-    const raw = rawMarketEUR(card);
+    const raw = rawMarketEUR(card, usdToEur);
     return NextResponse.json({
       card,
       raw,
-      prices: priceDetail(card),
+      prices: priceDetail(card, usdToEur),
       history: priceHistoryEUR(card),
       slabs: estimateSlabs(card, raw),
       analysis: analyseCard(card),
