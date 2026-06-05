@@ -187,13 +187,15 @@ export default function HomePage() {
               )}
               <button
                 type="submit"
-                className="btn-physical flex-none font-display text-[17px] rounded-full"
+                className="btn-physical flex-none font-display text-[17px] rounded-full inline-flex items-center justify-center"
                 style={{
                   background: "#FFCB05",
                   color: "#0B2A4A",
                   letterSpacing: ".5px",
                   padding: "0 26px",
                   height: 54,
+                  lineHeight: 1,
+                  paddingTop: 4,
                   boxShadow: "0 3px 0 #F2B705",
                 }}
               >

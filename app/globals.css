@@ -19,7 +19,8 @@ body {
 
 * { box-sizing: border-box; }
 a { color: inherit; text-decoration: none; }
-a:hover { color: #EE1515; }
+/* Geen globale a:hover kleur — elke link kiest zelf z'n hover via Tailwind
+   (bv. hover:text-accent). Voorkomt dat buttons met text-white rood worden. */
 button { font-family: inherit; cursor: pointer; }
 
 /* ----- Logo treatment (yellow fill + navy outline + drop shadow) ----- */
