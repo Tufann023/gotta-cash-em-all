@@ -144,12 +144,12 @@ export default function HomePage() {
               fontWeight: 400,
             }}
           >
-            Karton of kassa?
+            Word kk rijk
             <span
               className="logo-treatment-large"
               style={{ display: "block", transform: "rotate(-1.5deg)", marginTop: ".06em" }}
             >
-              Wij rekenen 't uit.
+              met Pokémon!
             </span>
           </h1>
           <p

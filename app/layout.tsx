@@ -8,7 +8,7 @@ import UserMenu from "./components/UserMenu";
 import { AuthProvider } from "@/lib/supabase/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "Gotta Cash 'Em All — Karton of kassa?",
+  title: "Gotta Cash 'Em All — Word kk rijk met Pokémon!",
   description: "Check elke Pokémon-kaart. Live prijzen, PSA-schattingen, prognose voor 3 tot 10 jaar en brutaal eerlijk AI-advies. Voor hosselaars en hardcore verzamelaars.",
 };
 
