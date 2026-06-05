@@ -4,6 +4,8 @@ import WatchlistBadge from "./components/WatchlistBadge";
 import WalletBadge from "./components/WalletBadge";
 import Pokeball from "./components/Pokeball";
 import MobileNav from "./components/MobileNav";
+import UserMenu from "./components/UserMenu";
+import { AuthProvider } from "@/lib/supabase/AuthProvider";
 
 export const metadata: Metadata = {
   title: "Gotta Cash 'Em All — Pokemon kaart tracker",
@@ -14,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="nl">
       <body>
+        <AuthProvider>
         <header className="sticky top-0 z-40 backdrop-blur-nav" style={{ backdropFilter: "saturate(1.4) blur(12px)", background: "color-mix(in srgb, #F4F8FE 82%, transparent)", borderBottom: "1px solid #DCE7F4" }}>
           <div className="max-w-page mx-auto px-4 md:px-7 h-[78px] flex items-center justify-between gap-3">
             <a href="/" className="flex items-center gap-2.5 md:gap-3 min-w-0" aria-label="Gotta Cash 'Em All home">
@@ -33,15 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150 inline-flex items-center gap-1.5" href="/wallet">
                 Mijn wallet <WalletBadge />
               </a>
-              <a
-                href="#"
-                className="btn-physical bg-accent text-white font-bold px-5 py-[11px] rounded-full text-[15px]"
-                style={{ boxShadow: "0 3px 0 #B30E0E" }}
-                aria-disabled="true"
-                title="Inloggen komt binnenkort"
-              >
-                Inloggen
-              </a>
+              <UserMenu />
             </nav>
             <MobileNav />
           </div>
@@ -57,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </footer>
+        </AuthProvider>
       </body>
     </html>
   );

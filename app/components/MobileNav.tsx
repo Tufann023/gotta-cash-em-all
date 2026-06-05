@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import WatchlistBadge from "./WatchlistBadge";
 import WalletBadge from "./WalletBadge";
+import UserMenu from "./UserMenu";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -91,15 +92,7 @@ export default function MobileNav() {
                 <path d="m9 18 6-6-6-6" />
               </svg>
             </a>
-            <a
-              href="#"
-              onClick={() => setOpen(false)}
-              aria-disabled="true"
-              className="btn-physical bg-accent text-white font-bold px-5 py-3 rounded-full text-[15px] text-center mt-2"
-              style={{ boxShadow: "0 3px 0 #B30E0E" }}
-            >
-              Inloggen
-            </a>
+            <UserMenu mobile />
           </div>
         </div>
       )}
