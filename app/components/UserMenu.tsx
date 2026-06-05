@@ -17,46 +17,37 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
 
   if (loading) {
     return (
-      <span className={mobile ? "block py-3" : "w-[100px] h-10"} aria-hidden="true">
+      <span className={mobile ? "block py-3" : "w-10 h-10"} aria-hidden="true">
         <span className="inline-block w-10 h-10 rounded-full bg-bg2 animate-pulse" />
       </span>
     );
   }
 
+  // -------- NIET INGELOGD: één CTA --------
   if (!user) {
     if (mobile) {
       return (
-        <>
-          <a href="/login" className="flex items-center justify-between px-4 py-3 rounded-md text-[16px] font-semibold text-ink hover:bg-bg2 transition">
-            Inloggen
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink3"><path d="m9 18 6-6-6-6"/></svg>
-          </a>
-          <a
-            href="/signup"
-            className="btn-physical text-center px-5 py-3 rounded-full text-[15px] mt-2"
-            style={{ background: "#EE1515", color: "#fff", boxShadow: "0 3px 0 #B30E0E", fontWeight: 700 }}
-          >
-            Account aanmaken
-          </a>
-        </>
+        <a
+          href="/login"
+          className="btn-physical text-center px-5 py-3 rounded-full text-[15px] mt-2"
+          style={{ background: "#EE1515", color: "#fff", boxShadow: "0 3px 0 #B30E0E", fontWeight: 700 }}
+        >
+          Inloggen
+        </a>
       );
     }
     return (
-      <div className="flex items-center gap-2">
-        <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition" href="/login">
-          Inloggen
-        </a>
-        <a
-          href="/signup"
-          className="btn-physical bg-accent text-white font-bold px-5 py-[11px] rounded-full text-[15px]"
-          style={{ boxShadow: "0 3px 0 #B30E0E" }}
-        >
-          Account
-        </a>
-      </div>
+      <a
+        href="/login"
+        className="btn-physical bg-accent text-white font-bold px-5 py-[11px] rounded-full text-[15px]"
+        style={{ boxShadow: "0 3px 0 #B30E0E" }}
+      >
+        Inloggen
+      </a>
     );
   }
 
+  // -------- INGELOGD --------
   const initial = (user.email ?? "?").slice(0, 1).toUpperCase();
   const avatarUrl = (user.user_metadata as any)?.avatar_url as string | undefined;
 
@@ -96,11 +87,13 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
         aria-expanded={open}
       >
         {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full" />
+          <img src={avatarUrl} alt="" className="w-9 h-9 rounded-full" />
         ) : (
-          <span className="w-8 h-8 rounded-full bg-accent text-white font-bold text-[14px] flex items-center justify-center">{initial}</span>
+          <span className="w-9 h-9 rounded-full bg-accent text-white font-bold text-[14px] flex items-center justify-center">{initial}</span>
         )}
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-ink3"><path d="m6 9 6 6 6-6"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={`text-ink3 transition-transform ${open ? "rotate-180" : ""}`}>
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
       </button>
 
       {open && (
@@ -108,29 +101,15 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
           className="absolute right-0 top-full mt-2 w-64 bg-card border rounded-md py-2 z-50 fade-in"
           style={{ borderColor: "#DCE7F4", boxShadow: "0 8px 24px rgba(11,42,74,.15)" }}
         >
-          <div className="px-4 py-2 border-b" style={{ borderColor: "#DCE7F4" }}>
+          <div className="px-4 py-2.5">
             <div className="text-[12px] text-ink3">Ingelogd als</div>
-            <div className="text-[13px] text-ink font-semibold truncate">{user.email}</div>
+            <div className="text-[14px] text-ink font-semibold truncate">{user.email}</div>
           </div>
-          <a
-            href="/wallet"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-[14px] text-ink hover:bg-bg2 transition"
-          >
-            Mijn wallet
-          </a>
-          <a
-            href="/watchlist"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-[14px] text-ink hover:bg-bg2 transition"
-          >
-            Watchlist
-          </a>
+          <div className="border-t" style={{ borderColor: "#DCE7F4" }} />
           <form action="/auth/signout" method="post">
             <button
               type="submit"
-              className="w-full text-left px-4 py-2.5 text-[14px] text-ink2 hover:bg-bg2 transition border-t mt-1 pt-2"
-              style={{ borderColor: "#DCE7F4" }}
+              className="w-full text-left px-4 py-2.5 text-[14px] text-ink2 hover:bg-bg2 hover:text-pokeRed transition"
             >
               Uitloggen
             </button>
