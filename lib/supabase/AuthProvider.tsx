@@ -27,13 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function refresh(u: User | null) {
       setUser(u);
-      setLoading(false);
       if (u) {
-        const { data } = await supabase.rpc("is_admin");
-        setIsAdmin(Boolean(data));
+        try {
+          const { data, error } = await supabase.rpc("is_admin");
+          setIsAdmin(!error && Boolean(data));
+        } catch {
+          setIsAdmin(false);
+        }
       } else {
         setIsAdmin(false);
       }
+      // loading=false PAS na admin-check, anders zien client routes
+      // (zoals /admin) een race waarbij user=set maar isAdmin nog niet bekend
+      setLoading(false);
     }
 
     supabase.auth.getUser().then(({ data: { user } }) => {
