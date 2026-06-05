@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import PriceChart from "@/app/components/PriceChart";
 import InvestmentAnalysis from "@/app/components/InvestmentAnalysis";
+import AddToWallet from "@/app/components/AddToWallet";
+import { CardDetailSkeleton } from "@/app/components/Skeleton";
 import { useWatchlist } from "@/lib/watchlist";
 
 type Slab = { grade: string; low: number; high: number; mid: number };
@@ -73,8 +75,8 @@ export default function CardPage({ params }: { params: { id: string } }) {
     })();
   }, [params.id]);
 
-  if (err) return <div className="text-neg">Fout: {err}</div>;
-  if (!data) return <div className="text-ink2">Laden…</div>;
+  if (err) return <div className="text-neg max-w-page mx-auto px-7 py-10">Fout: {err}</div>;
+  if (!data) return <CardDetailSkeleton />;
 
   const { card, raw, prices, history, slabs, analysis } = data;
   const inList = hydrated && has(card.id);
@@ -124,6 +126,14 @@ export default function CardPage({ params }: { params: { id: string } }) {
               <span className="opacity-70 text-[11px] font-normal">score {analysis.score}</span>
             </span>
 
+            <AddToWallet
+              cardId={card.id}
+              cardName={card.name}
+              cardSet={card.set.name}
+              cardImage={card.images.small}
+              suggestedPriceEUR={headline}
+            />
+
             <button
               onClick={() => inList ? remove(card.id) : add({
                 id: card.id, name: card.name, setName: card.set.name,
@@ -132,10 +142,10 @@ export default function CardPage({ params }: { params: { id: string } }) {
               className={
                 inList
                   ? "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-bg2 text-ink hover:bg-line transition"
-                  : "btn-physical inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px]"
+                  : "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-ink text-white hover:bg-pokeNavy transition"
               }
             >
-              {inList ? "✓ In watchlist" : "+ Watchlist"}
+              {inList ? "✓ In watchlist" : "👁 Volg op watchlist"}
             </button>
 
             {cardmarketUrl && (

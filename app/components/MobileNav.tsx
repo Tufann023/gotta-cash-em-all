@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import WatchlistBadge from "./WatchlistBadge";
+import WalletBadge from "./WalletBadge";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -72,6 +73,19 @@ export default function MobileNav() {
             >
               <span className="flex items-center gap-2">
                 Watchlist <WatchlistBadge />
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink3">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </a>
+            <a
+              href="/wallet"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between px-4 py-3 rounded-md text-[16px] font-semibold text-ink hover:bg-bg2 transition"
+              role="menuitem"
+            >
+              <span className="flex items-center gap-2">
+                Mijn wallet <WalletBadge />
               </span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink3">
                 <path d="m9 18 6-6-6-6" />

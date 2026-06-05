@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import WatchlistBadge from "./components/WatchlistBadge";
+import WalletBadge from "./components/WalletBadge";
 import Pokeball from "./components/Pokeball";
 import MobileNav from "./components/MobileNav";
 
@@ -28,6 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150" href="/">Zoeken</a>
               <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150 inline-flex items-center gap-1.5" href="/watchlist">
                 Watchlist <WatchlistBadge />
+              </a>
+              <a className="px-4 py-2.5 rounded-full text-[16px] font-semibold text-ink2 hover:bg-bg2 hover:text-ink transition-colors duration-150 inline-flex items-center gap-1.5" href="/wallet">
+                Mijn wallet <WalletBadge />
               </a>
               <a
                 href="#"
