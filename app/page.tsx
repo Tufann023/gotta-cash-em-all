@@ -341,7 +341,7 @@ export default function HomePage() {
       </section>
 
       {/* STEPS */}
-      <section className="px-7 py-[30px] pb-24">
+      <section className="px-4 md:px-7 pt-[30px] pb-16">
         <div className="max-w-page mx-auto">
           <div className="text-center font-bold text-[13px] uppercase text-accent mb-2.5" style={{ letterSpacing: ".14em" }}>
             Zo hossel je 't
@@ -351,12 +351,135 @@ export default function HomePage() {
           </h2>
           <div className="grid gap-[22px] md:grid-cols-3 grid-cols-1">
             <Step n="1" title="Zoek" body="Type een kaartnaam — desnoods half goed gespeld. Wij vissen 'm direct uit duizenden kaarten." color="#EE1515" />
-            <Step n="2" title="Bekijk" body="Live prijs, PSA-schattingen voor 8/9/10 en prognose voor 3, 5 en 10 jaar. Cijfers liegen niet." color="#2A75BB" />
+            <Step n="2" title="Check" body="Live prijs, PSA-schattingen, prognose voor 3, 5 en 10 jaar. Voeg toe aan je watchlist of wallet." color="#2A75BB" />
             <Step n="3" title="Beslis" body="Brutaal eerlijk advies van AI. Kopen, vasthouden of dumpen — wij sparen je gevoel niet." color="#3FA34D" />
           </div>
         </div>
       </section>
+
+      {/* FEATURES GRID */}
+      <section className="px-4 md:px-7 py-16">
+        <div className="max-w-page mx-auto">
+          <div className="text-center font-bold text-[13px] uppercase text-accent mb-2.5" style={{ letterSpacing: ".14em" }}>
+            Plus dit allemaal
+          </div>
+          <h2 className="text-center font-display font-normal m-0 mb-4 text-ink" style={{ fontSize: "clamp(30px, 4vw, 44px)" }}>
+            Alles wat je nodig hebt
+          </h2>
+          <p className="text-center text-ink2 text-[16px] max-w-prose mx-auto mb-11" style={{ lineHeight: 1.5 }}>
+            Geen 5 tools meer naast elkaar. Eén plek om je collectie te checken, te volgen en te managen.
+          </p>
+          <div className="grid gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-3 grid-cols-1">
+            <FeatureCard
+              icon="🔍" accent="#EE1515"
+              title="Slim zoeken"
+              body="Type 'charizard 151' en je krijgt direct de SIR uit set 151. Filters op set, rariteit en prijsklasse. Werkt ook met typo's."
+            />
+            <FeatureCard
+              icon="💶" accent="#2A75BB"
+              title="Live prijzen"
+              body="Actuele cijfers van TCGPlayer én Cardmarket, naast elkaar. Met verse-datum-stempel zodat je weet of het up-to-date is."
+            />
+            <FeatureCard
+              icon="🏷" accent="#FFCB05"
+              title="PSA-schattingen"
+              body="Per kaart een schatting voor PSA 8, 9 en 10. Gebaseerd op publieke verkopen, ±40% nauwkeurigheid. Plus link naar échte data."
+            />
+            <FeatureCard
+              icon="🤖" accent="#7C5CD6"
+              title="AI-advies"
+              body="Claude geeft je per kaart: koop/houden/verkopen-verdict, prognose voor 3, 5 en 10 jaar, koop- en verkoopprijs, plus 2-4 redenen voor en tegen."
+            />
+            <FeatureCard
+              icon="👁" accent="#3FA34D"
+              title="Watchlist"
+              body="Volg kaarten die je interessant vindt. Bij elk bezoek zie je hoeveel ze sinds toevoegen zijn gestegen of gedaald."
+            />
+            <FeatureCard
+              icon="💎" accent="#EE1515"
+              title="Mijn wallet"
+              body="Sla op wat je hebt. Per kaart: PSA-grade of losse staat, aankoopdatum en -prijs. Zie real-time je winst of verlies op je hele verzameling."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <CTASection />
     </>
+  );
+}
+
+function CTASection() {
+  return (
+    <section className="px-4 md:px-7 pb-24">
+      <div className="max-w-page mx-auto">
+        <div
+          className="rounded-lg p-8 md:p-12 text-center relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #EE1515 0%, #B30E0E 100%)",
+          }}
+        >
+          <div className="absolute -right-20 -top-20 w-[280px] h-[280px] rounded-full opacity-[.18]" style={{ background: "#FFCB05" }} />
+          <div className="absolute -left-16 -bottom-16 w-[200px] h-[200px] rounded-full opacity-[.10]" style={{ background: "#FFCB05" }} />
+          <div className="relative">
+            <div className="text-[11px] font-bold uppercase text-white/80 mb-3" style={{ letterSpacing: ".14em" }}>
+              Gratis voor altijd
+            </div>
+            <h2 className="font-display text-white m-0 mb-3" style={{ fontSize: "clamp(34px, 5vw, 56px)", fontWeight: 400, lineHeight: 1 }}>
+              Klaar om te hosselen?
+            </h2>
+            <p className="text-white/90 text-[17px] max-w-prose mx-auto mb-6" style={{ lineHeight: 1.5 }}>
+              Maak een gratis account, sla je wallet op en sync over al je apparaten. Geen creditcard, geen gezeik.
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <a
+                href="/signup"
+                className="btn-physical font-display text-[16px] px-6 py-3 rounded-full inline-flex items-center justify-center"
+                style={{
+                  background: "#FFCB05", color: "#0B2A4A",
+                  letterSpacing: ".5px", boxShadow: "0 3px 0 #F2B705",
+                  lineHeight: 1, paddingTop: 14, paddingBottom: 10,
+                }}
+              >
+                Account maken
+              </a>
+              <a
+                href="#top"
+                className="text-white font-semibold text-[14px] hover:text-white/80 transition px-4 py-3"
+              >
+                Eerst rondkijken →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureCard({ icon, accent, title, body }: { icon: string; accent: string; title: string; body: string }) {
+  return (
+    <div
+      className="bg-card border rounded-lg p-6 shadow-sm relative overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+      style={{ borderColor: "#DCE7F4" }}
+    >
+      <div
+        className="absolute -right-10 -top-10 w-[120px] h-[120px] rounded-full opacity-[.06]"
+        style={{ background: accent }}
+      />
+      <div className="relative">
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center text-[22px] mb-4"
+          style={{ background: `${accent}20`, border: `2px solid ${accent}` }}
+          aria-hidden="true"
+        >
+          {icon}
+        </div>
+        <h3 className="font-display font-normal text-[22px] m-0 mb-2 text-ink">{title}</h3>
+        <p className="m-0 text-ink2 text-[14px]" style={{ lineHeight: 1.55 }}>{body}</p>
+      </div>
+    </div>
   );
 }
 
