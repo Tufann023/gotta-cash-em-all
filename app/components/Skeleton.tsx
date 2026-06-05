@@ -24,7 +24,7 @@ export function SearchingBar() {
   return (
     <div className="flex items-center gap-3 text-[13px] text-ink3 font-semibold">
       <span className="pokeball-spinner" role="status" aria-label="Zoeken" />
-      <span>Zoeken in pokemontcg.io database…</span>
+      <span>Even spitten in de database…</span>
     </div>
   );
 }

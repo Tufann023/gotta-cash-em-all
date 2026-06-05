@@ -8,8 +8,8 @@ import UserMenu from "./components/UserMenu";
 import { AuthProvider } from "@/lib/supabase/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "Gotta Cash 'Em All — Pokemon kaart tracker",
-  description: "Zoek Pokemon kaarten. Live marktprijzen, PSA-schattingen, prijsverloop en investerings-analyse.",
+  title: "Gotta Cash 'Em All — Karton of kassa?",
+  description: "Check elke Pokémon-kaart. Live prijzen, PSA-schattingen, prognose voor 3 tot 10 jaar en brutaal eerlijk AI-advies. Voor hosselaars en hardcore verzamelaars.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="top">{children}</main>
         <footer className="border-t hairline mt-16" style={{ borderColor: "#DCE7F4" }}>
           <div className="max-w-page mx-auto px-7 py-[30px] flex items-center justify-between gap-4 flex-wrap">
-            <small className="text-ink3 text-[13px]">© 2026 Gotta Cash 'Em All · Geen creditcard nodig · Gebouwd voor verzamelaars</small>
+            <small className="text-ink3 text-[13px]">© 2026 Gotta Cash 'Em All · Gratis voor altijd · Voor hosselaars met scherpe ogen</small>
             <div className="flex gap-[18px]">
               <a className="text-ink2 font-semibold text-[14px] hover:text-accent transition-colors" href="#">Over</a>
               <a className="text-ink2 font-semibold text-[14px] hover:text-accent transition-colors" href="#">Prijzen</a>

@@ -133,7 +133,7 @@ export default function HomePage() {
               className="w-2 h-2 rounded-full"
               style={{ background: "#EE1515", boxShadow: "0 0 0 3px color-mix(in srgb, #EE1515 25%, transparent)" }}
             />
-            Live marktprijzen · PSA-schattingen
+            Zonder gezeik · Live prijzen · Echt advies
           </span>
           <h1
             className="font-display m-0 text-ink"
@@ -144,19 +144,19 @@ export default function HomePage() {
               fontWeight: 400,
             }}
           >
-            Elke Pokémon kaart.
+            Karton of kassa?
             <span
               className="logo-treatment-large"
               style={{ display: "block", transform: "rotate(-1.5deg)", marginTop: ".06em" }}
             >
-              Eén prijs.
+              Wij rekenen 't uit.
             </span>
           </h1>
           <p
             className="max-w-prose mx-auto mt-[30px] text-ink2 font-normal"
             style={{ fontSize: "clamp(17px, 2vw, 21px)", textWrap: "balance" }}
           >
-            Zoek per kaartnaam, set of nummer. Direct marktprijs, PSA-schatting per grade, prijsverloop en investerings-analyse.
+            Check elke Pokémon-kaart in 2 seconden. Live prijzen, PSA-schattingen en prognose voor 3, 5 en 10 jaar. Geen halve waarheden — wij zeggen gewoon wat 'ie écht waard is.
           </p>
 
           {/* SEARCH ZONE */}
@@ -204,7 +204,7 @@ export default function HomePage() {
             </form>
 
             <div className="flex items-center justify-center flex-wrap gap-[10px] mt-[22px]">
-              <span className="text-ink3 font-semibold text-[14px] mr-0.5">Probeer:</span>
+              <span className="text-ink3 font-semibold text-[14px] mr-0.5">Of test 'm met:</span>
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s.label}
@@ -237,7 +237,7 @@ export default function HomePage() {
             <div className="fade-up max-w-[1000px] mx-auto mt-[38px] text-left">
               <div className="flex items-baseline justify-between mb-[18px] px-1 flex-wrap gap-3">
                 <h2 className="font-display font-normal text-[26px] m-0 text-ink">
-                  Resultaten voor "{q}"
+                  Buit voor "{q}"
                 </h2>
                 <div className="flex items-center gap-2">
                   <span className="text-ink3 font-semibold text-[14px]">
@@ -329,7 +329,7 @@ export default function HomePage() {
                   )}
                 </>
               ) : (
-                <div className="text-center py-12 text-ink3">Geen kaarten match de actieve filters.</div>
+                <div className="text-center py-12 text-ink3">Niks past bij je filters. Te streng misschien?</div>
               )}
             </div>
           )}
@@ -344,15 +344,15 @@ export default function HomePage() {
       <section className="px-7 py-[30px] pb-24">
         <div className="max-w-page mx-auto">
           <div className="text-center font-bold text-[13px] uppercase text-accent mb-2.5" style={{ letterSpacing: ".14em" }}>
-            Hoe het werkt
+            Zo hossel je 't
           </div>
           <h2 className="text-center font-display font-normal m-0 mb-11 text-ink" style={{ fontSize: "clamp(30px, 4vw, 44px)" }}>
-            Van kaart naar cash in 3 stappen
+            Van zolderdoos naar kassa — in 3 stappen
           </h2>
           <div className="grid gap-[22px] md:grid-cols-3 grid-cols-1">
-            <Step n="1" title="Zoek" body="Type een kaartnaam, set of nummer. Resultaten direct, met live marktprijs." color="#EE1515" />
-            <Step n="2" title="Bekijk" body="PSA 8/9/10 schattingen, 30-dagen prijsverloop, signalen en prognose op 3 en 5 jaar." color="#2A75BB" />
-            <Step n="3" title="Beslis" body="Quick-analyse direct. Diepere AI-analyse op verzoek via Claude." color="#3FA34D" />
+            <Step n="1" title="Zoek" body="Type een kaartnaam — desnoods half goed gespeld. Wij vissen 'm direct uit duizenden kaarten." color="#EE1515" />
+            <Step n="2" title="Bekijk" body="Live prijs, PSA-schattingen voor 8/9/10 en prognose voor 3, 5 en 10 jaar. Cijfers liegen niet." color="#2A75BB" />
+            <Step n="3" title="Beslis" body="Brutaal eerlijk advies van AI. Kopen, vasthouden of dumpen — wij sparen je gevoel niet." color="#3FA34D" />
           </div>
         </div>
       </section>
@@ -470,14 +470,14 @@ function ExternalSearchPanel({ query, reason }: { query: string; reason: "zero" 
   return (
     <div className="bg-card rounded-md border p-6 mt-8 max-w-[1000px] mx-auto text-left" style={{ borderColor: "#DCE7F4" }}>
       <div className="text-[11px] font-bold uppercase text-accent mb-2" style={{ letterSpacing: ".14em" }}>
-        {reason === "zero" ? "Niets gevonden?" : "Niet wat je zocht?"}
+        {reason === "zero" ? "Helemaal niks?" : "Toch niet gevonden?"}
       </div>
       <div className="font-display text-[22px] text-ink mb-2">
-        Geen kaart in onze database met "{query}".
+        Geen kaart in onze database met "{query}". Bummer.
       </div>
       <p className="text-[14px] text-ink2 mb-4 max-w-2xl" style={{ lineHeight: 1.55 }}>
-        Onze data komt van pokemontcg.io — primair Engelstalig, beperkte Japanse coverage en geen sealed product.
-        Probeer een van deze externe bronnen:
+        We trekken alleen Engelse kaarten uit pokemontcg.io. Japanse promo's en sealed product zit er niet bij.
+        Probeer 'm hier — die hebben de buitenkansjes:
       </p>
       <div className="grid md:grid-cols-3 gap-3">
         {links.map((l) => (
